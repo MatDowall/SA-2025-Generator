@@ -1,0 +1,3422 @@
+{
+  "generatedFrom": "SA-2025-Template.pdf",
+  "generatedAt": "2026-06-23T06:22:34.674Z",
+  "pageCount": 52,
+  "dataPageLimit": 10,
+  "fields": [
+    {
+      "name": "Project_Name",
+      "type": "text",
+      "page": 1
+    },
+    {
+      "name": "Subcontractor_Name",
+      "type": "text",
+      "page": 1
+    },
+    {
+      "name": "Subcontractor_Reference",
+      "type": "text",
+      "page": 1
+    },
+    {
+      "name": "Trade_Desc",
+      "type": "text",
+      "page": 1
+    },
+    {
+      "name": "Contractor_Address_1",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Contractor_address_2",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Contractor_Email",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Contractor_Fax",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Contractor_Name",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Contractor_Signature",
+      "type": "signature",
+      "page": 5
+    },
+    {
+      "name": "Date_Day",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Date_Month",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Date_Year",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Initials Contractor",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Initials subcontractor",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Principal_Name",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Signed_Contractor_Witness",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Signed_Subcontractor_Witness",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontract_Value",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontractor_Address_1",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontractor_Address_2",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontractor_Email",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontractor_Fax",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontractor_GST",
+      "type": "text",
+      "page": 5
+    },
+    {
+      "name": "Subcontractor_Signature",
+      "type": "signature",
+      "page": 5
+    },
+    {
+      "name": "Asbuilts_Req",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Bond_In_Lieu_Val_DLP",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Bond_In_Lieu_Val_Period",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Bonds_In_Lieu_of_Retentions",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Continuity_Attached",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Continuity_Guarantee_Required",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Guarantees_Copies_Attached",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Head_Contract_Type",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Initials Contractor 6",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Initials subcontractor 6",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Operating_Instruction_and_Maintenance_Manuals",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Perf_Bond",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/No",
+        "/Yes"
+      ]
+    },
+    {
+      "name": "Perf_Bond_Val",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "PS1_Req",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "PS2_Req",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "PS3_Req",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "PS4_Req",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Shop_Drawings_Req",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Subcontract_Design_Responsibilities",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Subcontractor_Design_Responsibilities",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Subcontractor_Obtained_Building_Consent",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Trade_Guarantee_Duration",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Trade_Guarantee_When_Required",
+      "type": "text",
+      "page": 6
+    },
+    {
+      "name": "Trade_Guarantees",
+      "type": "radio",
+      "page": 6,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "8.2.3_Other",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Aircraft_Watercraft_val",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Completion of the Subcontract Works",
+      "type": "checkbox",
+      "page": 7
+    },
+    {
+      "name": "Contract_Works_Deductible",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "CW_Insurance_by",
+      "type": "radio",
+      "page": 7,
+      "onStates": [
+        "/Principal",
+        "/Contractor"
+      ]
+    },
+    {
+      "name": "Demo_Pct",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Demo_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Fees_Pct",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Fees_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Inc_Pct",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Increase_Cost_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Initials Contractor 7",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Initials subcontractor7",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Insurance_of_Contract_Works_by_Subcontractor",
+      "type": "radio",
+      "page": 7,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "MV_Val",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Other",
+      "type": "checkbox",
+      "page": 7
+    },
+    {
+      "name": "PC_Due_Date",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "PI_Insurance_Req",
+      "type": "radio",
+      "page": 7,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "PI_Val",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "PL_Insur_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Plant_Equp_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Practical completion of Head Contract",
+      "type": "checkbox",
+      "page": 7
+    },
+    {
+      "name": "Special_Extension_Req_for_Airside",
+      "type": "radio",
+      "page": 7,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Subcontract_Works_Insurance_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Total_Insur_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Use_of_Aircraft_or_Watercraft",
+      "type": "radio",
+      "page": 7,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Var_Intention_Timeframe",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Var_Pct",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Var_Submission_Timeframe",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Variations_Value",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Vibration_Support_Removal",
+      "type": "radio",
+      "page": 7,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Vibration_Support_Val",
+      "type": "text",
+      "page": 7
+    },
+    {
+      "name": "Clain_Frequency",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "DLP_Per",
+      "type": "dropdown",
+      "page": 8,
+      "options": [
+        "Month",
+        "Week",
+        "Day",
+        "-"
+      ]
+    },
+    {
+      "name": "DLP_Period",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "DLP_Period_Separable_Portions",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "DLP_Sep_Por_Per",
+      "type": "dropdown",
+      "page": 8,
+      "options": [
+        "Month",
+        "Week",
+        "Day",
+        "-"
+      ]
+    },
+    {
+      "name": "Initials Contractor 8",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Initials subcontractor8",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Interim_Final_Account_Due_Date",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Interim_Final_Account_Process",
+      "type": "radio",
+      "page": 8,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "LD_Per",
+      "type": "dropdown",
+      "page": 8,
+      "options": [
+        "Month",
+        "Week",
+        "Day",
+        "-"
+      ]
+    },
+    {
+      "name": "LD_Sep_Por_Per",
+      "type": "dropdown",
+      "page": 8,
+      "options": [
+        "Month",
+        "Week",
+        "Day",
+        "-"
+      ]
+    },
+    {
+      "name": "LD_Sep_Por_Value",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "LD_Val",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "PC_Separable_Portions_Date",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Ret_First_Pct",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Ret_First_Val",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Ret_Next_Pct",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Ret_Next_Val",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Ret_Rem_Pct",
+      "type": "text",
+      "page": 8
+    },
+    {
+      "name": "Cost_Fluctuations",
+      "type": "radio",
+      "page": 9,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "DLP_Pct",
+      "type": "text",
+      "page": 9
+    },
+    {
+      "name": "Email_to_Serve_Notices",
+      "type": "radio",
+      "page": 9,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Initials Contractor 9",
+      "type": "text",
+      "page": 9
+    },
+    {
+      "name": "Initials subcontractor 9",
+      "type": "text",
+      "page": 9
+    },
+    {
+      "name": "Materials_Offsite",
+      "type": "radio",
+      "page": 9,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Misc_Other",
+      "type": "text",
+      "page": 9
+    },
+    {
+      "name": "Pre-Let_Held",
+      "type": "radio",
+      "page": 9,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Subject_to_Remeasure",
+      "type": "radio",
+      "page": 9,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Supply_Only_Subcontract",
+      "type": "radio",
+      "page": 9,
+      "onStates": [
+        "/Yes",
+        "/No"
+      ]
+    },
+    {
+      "name": "Additional_Docs_L",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Docs_M",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Docs_N",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Docs_O",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Price_Item_1",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Price_Item_1_Value",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Price_Item_2",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Additional_Price_Item_2_Value",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Contract Programme",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Contract_Programme",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Contract_Programme_Date",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Contract_Programme_Ref",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Email dated",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Email_Date",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Email_From",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Fax dated",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Fax_Date",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Fax_From",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Initials Contractor 10",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Initials subcontractor 10",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Invitation to tender dated",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Invite_Tender_Date",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Letter dated",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Letter of Award dated",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Letter_Date",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Letter_From",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "LOA_Date",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Minutes of Subcontract preletting meetings",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Notices to tenderers numbers",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "NTT_Qty",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Original_Tender_Price",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Other_Specials",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Prelet_Day",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Prelet_Month",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Prelet_Year",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Schedule of quantities if applicable",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Special_Conditions",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Subcontractor site specific safety plan",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Summary of Subcontract Sum",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Summary of Subcontract Sum_02",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Summary of Subcontract Sum_03",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Summary of Subcontract Sum_04",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Summary of Subcontract Sum_05",
+      "type": "checkbox",
+      "page": 10
+    },
+    {
+      "name": "Total_Subcontract_Sum",
+      "type": "text",
+      "page": 10
+    },
+    {
+      "name": "Initials Contractor 11",
+      "type": "text",
+      "page": 11
+    },
+    {
+      "name": "Initials subcontractor 11",
+      "type": "text",
+      "page": 11
+    },
+    {
+      "name": "Initials Contractor 12",
+      "type": "text",
+      "page": 12
+    },
+    {
+      "name": "Initials subcontractor 12",
+      "type": "text",
+      "page": 12
+    },
+    {
+      "name": "Initials Contractor 13",
+      "type": "text",
+      "page": 13
+    },
+    {
+      "name": "Initials subcontractor 13",
+      "type": "text",
+      "page": 13
+    },
+    {
+      "name": "Initials Contractor 14",
+      "type": "text",
+      "page": 14
+    },
+    {
+      "name": "Initials subcontractor 14",
+      "type": "text",
+      "page": 14
+    },
+    {
+      "name": "Initials Contractor 155",
+      "type": "text",
+      "page": 15
+    },
+    {
+      "name": "Initials subcontractor 15",
+      "type": "text",
+      "page": 15
+    },
+    {
+      "name": "Initials Contractor 16",
+      "type": "text",
+      "page": 16
+    },
+    {
+      "name": "Initials subcontractor 16",
+      "type": "text",
+      "page": 16
+    },
+    {
+      "name": "Initials Contractor17",
+      "type": "text",
+      "page": 17
+    },
+    {
+      "name": "Initials subcontractor17",
+      "type": "text",
+      "page": 17
+    },
+    {
+      "name": "Initials Contractor18",
+      "type": "text",
+      "page": 18
+    },
+    {
+      "name": "Initials subcontractor18",
+      "type": "text",
+      "page": 18
+    },
+    {
+      "name": "Initials Contractor19",
+      "type": "text",
+      "page": 19
+    },
+    {
+      "name": "Initials subcontractor19",
+      "type": "text",
+      "page": 19
+    },
+    {
+      "name": "Initials Contractor20",
+      "type": "text",
+      "page": 20
+    },
+    {
+      "name": "Initials subcontractor20",
+      "type": "text",
+      "page": 20
+    },
+    {
+      "name": "Initials Contractor21",
+      "type": "text",
+      "page": 21
+    },
+    {
+      "name": "Initials subcontractor21",
+      "type": "text",
+      "page": 21
+    },
+    {
+      "name": "Initials Contractor22",
+      "type": "text",
+      "page": 22
+    },
+    {
+      "name": "Initials subcontractor22",
+      "type": "text",
+      "page": 22
+    },
+    {
+      "name": "Initials Contractor23",
+      "type": "text",
+      "page": 23
+    },
+    {
+      "name": "Initials subcontractor23",
+      "type": "text",
+      "page": 23
+    },
+    {
+      "name": "Initials Contractor24",
+      "type": "text",
+      "page": 24
+    },
+    {
+      "name": "Initials subcontractor24",
+      "type": "text",
+      "page": 24
+    },
+    {
+      "name": "Initials Contractor25",
+      "type": "text",
+      "page": 25
+    },
+    {
+      "name": "Initials subcontractor25",
+      "type": "text",
+      "page": 25
+    },
+    {
+      "name": "Initials subcontractor27",
+      "type": "text",
+      "page": 26
+    },
+    {
+      "name": "Initials Contractor27",
+      "type": "text",
+      "page": 27
+    },
+    {
+      "name": "Initials Contractor28",
+      "type": "text",
+      "page": 28
+    },
+    {
+      "name": "Initials subcontractor28",
+      "type": "text",
+      "page": 28
+    },
+    {
+      "name": "Initials subcontractor29",
+      "type": "text",
+      "page": 29
+    },
+    {
+      "name": "Initials Contractor29",
+      "type": "text",
+      "page": 30
+    },
+    {
+      "name": "Initials Contractor30",
+      "type": "text",
+      "page": 31
+    },
+    {
+      "name": "Initials subcontractor30",
+      "type": "text",
+      "page": 31
+    },
+    {
+      "name": "Initials Contractor31",
+      "type": "text",
+      "page": 32
+    },
+    {
+      "name": "Initials subcontractor31",
+      "type": "text",
+      "page": 32
+    },
+    {
+      "name": "Initials Contractor32",
+      "type": "text",
+      "page": 33
+    },
+    {
+      "name": "Initials subcontractor32",
+      "type": "text",
+      "page": 33
+    },
+    {
+      "name": "Initials Contractor33",
+      "type": "text",
+      "page": 34
+    },
+    {
+      "name": "Initials subcontractor33",
+      "type": "text",
+      "page": 34
+    },
+    {
+      "name": "Initials Contractor34",
+      "type": "text",
+      "page": 35
+    },
+    {
+      "name": "Initials subcontractor34",
+      "type": "text",
+      "page": 35
+    },
+    {
+      "name": "Initials Contractor35",
+      "type": "text",
+      "page": 36
+    },
+    {
+      "name": "Initials subcontractor35",
+      "type": "text",
+      "page": 36
+    },
+    {
+      "name": "Claim Date",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Claim Date 2",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "FROM Payee  Subcontractor Name and Address",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Initials Contractor36",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Initials subcontractor36",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Job No",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Location",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Payment Claim No",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Period From",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Period To",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Project_2",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Subcontractors GST No",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "TO Payer  Contractors Name and Address",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Trade_2",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_80",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_81",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_82",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_83",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_84",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_85",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_86",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_87",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_88",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_89",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_90",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_91",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_92",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_93",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_94",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "undefined_95",
+      "type": "text",
+      "page": 37
+    },
+    {
+      "name": "Claimed to date _01.0",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.1",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.4",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.5",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.6",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Claimed to date _01.7",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.0",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.1",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.4",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.5",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.6",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "DESCRIPTION  _01.7",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "fill_9",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Initials Contractor37",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Initials subcontractor37",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Location_2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Period Ending",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Project_3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.0",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.1",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.4",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.5",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.6",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "SchedItem1 _01.7",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Subcontractor_2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.0",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.1",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.4",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.5",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.6",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total Claimed to date _01.7",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.0",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.1",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.2",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.4",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.5",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.6",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Total value excl GST _01.7",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "Trade_3",
+      "type": "text",
+      "page": 38
+    },
+    {
+      "name": "% claimed to date _02.0",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.1",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.5",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.6",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "% claimed to date _02.7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "fill_7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Initials Contractor38",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Initials subcontractor38",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Location_3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Period Ending_2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Project_4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.0",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.1",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.5",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.6",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "SchedItem1 _02.7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Subcontractor_3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.0",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.1",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.5",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.6",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Total Claimed to date _02.7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Trade_4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.0",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.1",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.5",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.6",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation Description _02.7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.0",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.1",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.5",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.6",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value approved excl GST _02.7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.0",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.1",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.2",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.3",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.4",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.5",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.6",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Variation value excl GST _02.7",
+      "type": "text",
+      "page": 39
+    },
+    {
+      "name": "Initials Contractor39",
+      "type": "text",
+      "page": 40
+    },
+    {
+      "name": "Initials subcontractor39",
+      "type": "text",
+      "page": 40
+    },
+    {
+      "name": "Initials Contractor40",
+      "type": "text",
+      "page": 41
+    },
+    {
+      "name": "Initials subcontractor40",
+      "type": "text",
+      "page": 41
+    },
+    {
+      "name": "Certified",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Date",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Date issued",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Due date for payment",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Fluctuations claimed to date1",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Fluctuations claimed to date2",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Fluctuations claimed to date3",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "For payment claim No",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "GST No",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "GST No_2",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Initials Contractor41",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Initials subcontractor41",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Location_4",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Materials off-site claimed to date1",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Materials off-site claimed to date2",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Materials off-site claimed to date3",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Materials on-site claimed to date",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Materials on-site claimed to date02",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Materials on-site claimed to date03",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Payee name/address",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Payer name/address",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Period to",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Project Name",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Reference No",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Subcontract No",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Subcontract Sum",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Subcontractors work value to date",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Subcontractors work value to date1",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Subcontractors work value to date3",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Total claimed excluding GST",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Trade_5",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_100",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_101",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_102",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_103",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_104",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_105",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_106",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_107",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_98",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "undefined_99",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Variations claimed to date1",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Variations claimed to date2",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "Variations claimed to date3",
+      "type": "text",
+      "page": 42
+    },
+    {
+      "name": "a",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "a_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Address 1",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Address 2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Agreed Subcontract Sum",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "b",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "b_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "c",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "c_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Confirmation specific conditions have been agreed as attached",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Contract No",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Contract Title",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Contractor Representatives",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Date_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Email",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Email_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Fax No",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Fax No_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Initials Contractor42",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Initials subcontractor42",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Mobile",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Mobile_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Mobile_3",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Mobile_4",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Mobile_5",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Mobile_6",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Name",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Office",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Office_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Phone No",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Phone No_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Safety",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Safety_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Scope of subcontract works",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Site",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Site Address",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Site_2",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Subcontract Trade",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Subcontractor clarifications not covered in Subcontract Specific Conditions Where responsibility for an item below is assigned to the Subcontractor in Subcontract General Conditions any change should be clearly defined in the Special Conditions section of the Subcontract Specific Conditions Numbers in brackets refer to relevant clauses in Subcontract General Conditions",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Subcontractor Representatives",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Submitted Tender Value",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "Venue",
+      "type": "text",
+      "page": 43
+    },
+    {
+      "name": "CommentsSet out from grid lines and provide datums",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "CommentsSet out grid lines and floor levels",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorAdditional power requirements eg 3 phase",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorClean area of work on a daily basis 58",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorCrane booking system 56 unscheduled or late deliveries may be rejected",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorCutting holes and chases adequate notification required",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorDistribution of materials to working area",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorFume extraction",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorMark out holes and chases and supply drawings of these",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorPower for hand tools only  240V leads by Subcontractor",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorProvide lunch room and toilets 542",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorProvide offices workshops storage and containers 542",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorRemoval of debris waste and packaging to designated bins 58",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorScaffolding above a 3 metre platform height 55 extent  duration must be agreed prior to erection",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorScaffolding fixed or mobile up to 3 metre platform height 55 extent  duration must be agreed prior to erection",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorSet out from grid lines and provide datums",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorSet out grid lines and floor levels",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorSite lighting background safety and task specific lighting",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorSpecial hoisting facilities ie crane  hoist  forklift 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorUnloading of materials and plant",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorUse of personnel hoist 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorUse of tower crane 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "ContractorWater supply point on each floor hoses by Subcontractor",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Group30",
+      "type": "radio",
+      "page": 44,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group31",
+      "type": "radio",
+      "page": 44,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsAdditional power requirements eg 3 phase",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsCrane booking system 56 unscheduled or late deliveries may be rejected",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsCutting holes and chases adequate notification required",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsDistribution of materials to working area",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsFume extraction",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsMark out holes and chases and supply drawings of these",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsPower for hand tools only  240V leads by Subcontractor",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsScaffolding above a 3 metre platform height 55 extent  duration must be agreed prior to erection",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsScaffolding fixed or mobile up to 3 metre platform height 55 extent  duration must be agreed prior to erection",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsSite lighting background safety and task specific lighting",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsSpecial hoisting facilities ie crane  hoist  forklift 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsUnloading of materials and plant",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsUse of personnel hoist 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsUse of tower crane 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "If 542 does not apply detail in Special Conditions section of Specific ConditionsWater supply point on each floor hoses by Subcontractor",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Initials Contractor43",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Initials subcontractor43",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorAdditional power requirements eg 3 phase",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorCrane booking system 56 unscheduled or late deliveries may be rejected",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorCutting holes and chases adequate notification required",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorDistribution of materials to working area",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorFume extraction",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorMark out holes and chases and supply drawings of these",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorPower for hand tools only  240V leads by Subcontractor",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorProvide lunch room and toilets 542",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorProvide offices workshops storage and containers 542",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorScaffolding above a 3 metre platform height 55 extent  duration must be agreed prior to erection",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorScaffolding fixed or mobile up to 3 metre platform height 55 extent  duration must be agreed prior to erection",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorSet out from grid lines and provide datums",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorSet out grid lines and floor levels",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorSite lighting background safety and task specific lighting",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorSpecial hoisting facilities ie crane  hoist  forklift 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorUnloading of materials and plant",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorUse of personnel hoist 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorUse of tower crane 56",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "Sub contractorWater supply point on each floor hoses by Subcontractor",
+      "type": "text",
+      "page": 44
+    },
+    {
+      "name": "a_3",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Approximate Commencement Date",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "b_3",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "c_3",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorAttendance on all progress technical and safety meetings 5151",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorEstablish  agree approved quality assurance check sheet 5111",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorFinal clean on completion of Subcontract Works 58",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorProtect work in progress 51",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorProtect work until practical completion 51",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorSamples and prior material approvals",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "ContractorWork permits for all nonresidents entering site",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Group32",
+      "type": "radio",
+      "page": 45,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group33",
+      "type": "radio",
+      "page": 45,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group34",
+      "type": "radio",
+      "page": 45,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group35",
+      "type": "radio",
+      "page": 45,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "If 51 does not apply detail in Special Conditions section of Specific ConditionsAttendance on all progress technical and safety meetings 5151",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "If 51 does not apply detail in Special Conditions section of Specific ConditionsEstablish  agree approved quality assurance check sheet 5111",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "If 51 does not apply detail in Special Conditions section of Specific ConditionsProtect work until practical completion 51",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "If 51 does not apply detail in Special Conditions section of Specific ConditionsSamples and prior material approvals",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "If 51 does not apply detail in Special Conditions section of Specific ConditionsWork permits for all nonresidents entering site",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Initials Contractor44",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Initials subcontractor44",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Level of supervision to be provided",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Site Access Will be as follows  deliveries need to be coordinated with site team to prevent congestion and delays",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Yes  NoAttendance on all progress technical and safety meetings 5151",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Yes  NoEstablish  agree approved quality assurance check sheet 5111",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Yes  NoProtect work until practical completion 51",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Yes  NoSamples and prior material approvals",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "Yes  NoWork permits for all nonresidents entering site",
+      "type": "text",
+      "page": 45
+    },
+    {
+      "name": "a_4",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "b_4",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "By when",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "c_4",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "Group36",
+      "type": "radio",
+      "page": 46,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group37",
+      "type": "radio",
+      "page": 46,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group38",
+      "type": "radio",
+      "page": 46,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group39",
+      "type": "radio",
+      "page": 46,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group40",
+      "type": "radio",
+      "page": 46,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Group41",
+      "type": "radio",
+      "page": 46,
+      "onStates": [
+        "/Choice1",
+        "/Choice2"
+      ]
+    },
+    {
+      "name": "Initials Contractor45",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "Initials subcontractor45",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "Number of copies and drawing size for each submission",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "Shop drawing review and approval period",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "Signature1",
+      "type": "signature",
+      "page": 46
+    },
+    {
+      "name": "Signature2",
+      "type": "signature",
+      "page": 46
+    },
+    {
+      "name": "Subcontractor representative to action",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "These minutes accurately record our discussion Dated",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "undefined_125",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "undefined_126",
+      "type": "text",
+      "page": 46
+    },
+    {
+      "name": "And",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "And_2",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "By",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Contract",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "for",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Initials Contractor46",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Initials subcontractor46",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "NZ",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "of",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "of_2",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Project_5",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "The Contractor",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "This deed is made on date",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Trade 1",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Trade 2",
+      "type": "text",
+      "page": 47
+    },
+    {
+      "name": "Address 1_2",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Address 2_2",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Company",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Company_2",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Company_3",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Date_3",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Date_4",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Date_5",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Date_6",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Initials Contractor47",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Initials subcontractor47",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Name_2",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Name_3",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Name_4",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Position_3",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Position_4",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Position_5",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "Signature",
+      "type": "signature",
+      "page": 48
+    },
+    {
+      "name": "Signature_2",
+      "type": "signature",
+      "page": 48
+    },
+    {
+      "name": "Signature_3",
+      "type": "signature",
+      "page": 48
+    },
+    {
+      "name": "Signature_4",
+      "type": "signature",
+      "page": 48
+    },
+    {
+      "name": "Witness",
+      "type": "text",
+      "page": 48
+    },
+    {
+      "name": "And_3",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "And_4",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "By_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Contract_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "for_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Initials Contractor48",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Initials subcontractor48",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "NZ_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "of_3",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "of_4",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Project_6",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "The Contractor_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "This deed is made on date_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Trade 1_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Trade 2_2",
+      "type": "text",
+      "page": 49
+    },
+    {
+      "name": "Address 1_3",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Address 2_3",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Company_4",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Company_5",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Company_6",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Date_10",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Date_7",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Date_8",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Date_9",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Initials Contractor49",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Initials subcontractor49",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Name_5",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Name_6",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Name_7",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Position_6",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Position_7",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Position_8",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "Signature_5",
+      "type": "signature",
+      "page": 50
+    },
+    {
+      "name": "Signature_6",
+      "type": "signature",
+      "page": 50
+    },
+    {
+      "name": "Signature_7",
+      "type": "signature",
+      "page": 50
+    },
+    {
+      "name": "Signature_8",
+      "type": "signature",
+      "page": 50
+    },
+    {
+      "name": "Witness_2",
+      "type": "text",
+      "page": 50
+    },
+    {
+      "name": "And_5",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "And_6",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "By_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Contract_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "for_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Initials Contractor50",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Initials subcontractor50",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "of_5",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "of_6",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Project_7",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "sums up to the aggregate amount of NZ",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "The Contractor_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "This deed is made on date_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Trade 1_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Trade 2_3",
+      "type": "text",
+      "page": 51
+    },
+    {
+      "name": "Address 1_4",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Address 2_4",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Company_7",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Company_8",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Company_9",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Date_11",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Date_12",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Date_13",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Date_14",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Initials subcontractor51",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Name_10",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Name_8",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Name_9",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Position_10",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Position_11",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Position_9",
+      "type": "text",
+      "page": 52
+    },
+    {
+      "name": "Signature_10",
+      "type": "signature",
+      "page": 52
+    },
+    {
+      "name": "Signature_11",
+      "type": "signature",
+      "page": 52
+    },
+    {
+      "name": "Signature_12",
+      "type": "signature",
+      "page": 52
+    },
+    {
+      "name": "Signature_9",
+      "type": "signature",
+      "page": 52
+    },
+    {
+      "name": "Witness_3",
+      "type": "text",
+      "page": 52
+    }
+  ]
+}

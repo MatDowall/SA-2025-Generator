@@ -1,0 +1,60 @@
+.csvsel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.csvsel__note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.csvsel__page {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csvsel__page-head {
+  background: var(--bg);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.csvsel__page-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.csvsel__count {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+.csvsel__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  padding: 8px 10px;
+}
+
+.csvsel__field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 0;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.csvsel__fname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.88rem;
+}

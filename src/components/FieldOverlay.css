@@ -1,0 +1,55 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  /* Let drags fall through to the page for panning; controls re-enable below. */
+  pointer-events: none;
+}
+
+.overlay__input,
+.overlay__check {
+  position: absolute;
+  pointer-events: auto;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.overlay__input {
+  border: 1px solid rgba(47, 111, 235, 0.35);
+  background: rgba(47, 111, 235, 0.06);
+  color: #0a1f44;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: 1px;
+  font-family: inherit;
+}
+
+.overlay__input:focus {
+  outline: 1px solid var(--accent);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.overlay__input:disabled {
+  background: transparent;
+  color: #0a1f44;
+  border-color: transparent;
+}
+
+.overlay__textarea {
+  resize: none;
+  overflow: hidden;
+  padding: 1px 2px;
+}
+
+.overlay__select {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.overlay__check {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.overlay__check:disabled {
+  cursor: default;
+}

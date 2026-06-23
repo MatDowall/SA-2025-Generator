@@ -1,0 +1,63 @@
+/* Global reset + theme tokens for SA-2025 Generator. */
+:root {
+  --bg: #f4f5f7;
+  --bg-panel: #ffffff;
+  --bg-bar: #2b2f36;
+  --bg-bar-text: #e8eaed;
+  --bg-hover: #eceef1;
+  --bg-active: #e1e8f5;
+  --border: #d7dade;
+  --border-strong: #c2c6cc;
+  --text: #1c1f23;
+  --text-muted: #6b7178;
+  --accent: #2f6feb;
+  --accent-text: #ffffff;
+  --danger: #d83a48;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+
+  font-family: "Segoe UI", Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1d21;
+    --bg-panel: #24272c;
+    --bg-bar: #15171a;
+    --bg-bar-text: #e8eaed;
+    --bg-hover: #2d3036;
+    --bg-active: #313a4d;
+    --border: #34383e;
+    --border-strong: #41464d;
+    --text: #e8eaed;
+    --text-muted: #9aa0a8;
+    --accent: #4a85ff;
+    --accent-text: #ffffff;
+    --danger: #ff6470;
+    --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden; /* the app shell manages its own scrolling regions */
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}

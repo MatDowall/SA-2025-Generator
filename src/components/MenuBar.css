@@ -1,0 +1,78 @@
+.menubar {
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px;
+  user-select: none;
+  flex: 0 0 auto;
+}
+
+.menubar__menu {
+  position: relative;
+  display: flex;
+}
+
+.menubar__top {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 0 10px;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  margin: 3px 0;
+}
+
+.menubar__top:hover,
+.menubar__top.is-open {
+  background: var(--bg-active);
+}
+
+.menubar__dropdown {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  min-width: 220px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 4px;
+  z-index: 500;
+}
+
+.menubar__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  text-align: left;
+}
+
+.menubar__item:hover:not(:disabled) {
+  background: var(--bg-active);
+}
+
+.menubar__item:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.menubar__shortcut {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.menubar__separator {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
