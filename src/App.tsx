@@ -10,6 +10,7 @@ import { OpenProjectModal } from "./components/OpenProjectModal";
 import { ExportCsvModal } from "./components/ExportCsvModal";
 import { ImportCsvModal } from "./components/ImportCsvModal";
 import { UpdateBanner } from "./components/UpdateBanner";
+import { AboutModal } from "./components/AboutModal";
 import {
   ExportPdfModal,
   type ExportScope,
@@ -656,21 +657,7 @@ function App() {
         </Modal>
       )}
 
-      {dialog.kind === "about" && (
-        <Modal
-          title="About SA-2025 Generator"
-          onClose={close}
-          primaryActions={[{ label: "Close", variant: "primary", onClick: close }]}
-        >
-          <p style={{ marginTop: 0 }}>
-            <strong>SA-2025 Generator</strong>
-          </p>
-          <p>
-            Generates Master Builders Subcontract Agreements (2025) — one filled
-            PDF per subcontractor, in batch or individually.
-          </p>
-        </Modal>
-      )}
+      {dialog.kind === "about" && <AboutModal onClose={close} />}
     </div>
   );
 }
