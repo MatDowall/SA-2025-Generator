@@ -12,10 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Tauri updater signing keys — never commit. Private key also lives in
-# TAURI_SIGNING_PRIVATE_KEY for release builds; see .tauri-keys/README.md.
-.tauri-keys/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
