@@ -35,7 +35,17 @@ const TP_COLUMNS: (keyof TpCompany)[] = [
 ];
 
 export function createEngine(): HyperFormula {
-  const hf = HyperFormula.buildEmpty({ licenseKey: "gpl-v3" });
+  // dateFormats: [] disables HyperFormula's default auto-parsing of
+  // date-like strings (e.g. "24/06/2026") into date serial numbers. Every
+  // date in this app is a plain typed/imported string copied straight
+  // through to a PDF text field or compared with `>" "` for "is this
+  // populated" — never used in date arithmetic — so silently coercing it to
+  // a number only breaks both: the PDF shows a raw serial instead of the
+  // string, and a number is never ">" a string, so "is populated" checkbox
+  // formulas evaluate false. Same family of surprise as the boolean
+  // auto-coercion noted below; same fix shape (stop HyperFormula's type
+  // guessing rather than work around it formula-by-formula).
+  const hf = HyperFormula.buildEmpty({ licenseKey: "gpl-v3", dateFormats: [] });
   hf.addSheet(TP_SHEET);
   hf.addSheet(SD_SHEET);
   hf.addSheet(CI_SHEET);

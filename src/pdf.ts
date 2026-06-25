@@ -97,7 +97,12 @@ export async function getPageLayout(
         // only be edited through that constrained control on the
         // Subcontractor Details grid — see LOCKED_PDF_FIELDS.
         readOnly: !!a.readOnly || LOCKED_PDF_FIELDS.has(a.fieldName),
-        multiline: !!a.multiLine,
+        // The template doesn't flag every long-content field multiline
+        // (e.g. "Specific Condition Data" date/notes fields) — treat all
+        // text fields as multiline in the overlay too, matching the PDF
+        // export fix in pdfFill.ts, so long values wrap and shrink to fit
+        // instead of clipping in a single-line input.
+        multiline: kind === "text",
         fontSize: a.defaultAppearanceData?.fontSize || undefined,
         options: a.options?.map((o: any) => ({
           value: o.exportValue ?? o.displayValue ?? "",
