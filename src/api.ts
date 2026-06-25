@@ -49,8 +49,7 @@ export const api = {
 
   analyzeImportCsv: (path: string) =>
     invoke<ImportReport>("analyze_import_csv", { path }),
-  importProjectCsv: (projectId: number, path: string) =>
-    invoke<ImportResult>("import_project_csv", { projectId, path }),
+  parseImportCsv: (path: string) => invoke<ParsedCsv>("parse_import_csv", { path }),
 
   getTemplatePdf: () => invoke<ArrayBuffer>("get_template_pdf"),
   writeBinaryFile: (path: string, contents: number[]) =>
@@ -61,7 +60,74 @@ export const api = {
   importProjectFile: (path: string) =>
     invoke<Project>("import_project_file", { path }),
   getLaunchFile: () => invoke<string | null>("get_launch_file"),
+
+  getContractInfo: (projectId: number) =>
+    invoke<Record<string, string>>("get_contract_info", { projectId }),
+  setContractInfoValue: (projectId: number, fieldKey: string, value: string) =>
+    invoke<void>("set_contract_info_value", { projectId, fieldKey, value }),
+  setContractInfoBulk: (projectId: number, values: Record<string, string>) =>
+    invoke<void>("set_contract_info_bulk", { projectId, values }),
+
+  getSettings: () => invoke<Record<string, string>>("get_settings"),
+  setSetting: (key: string, value: string) =>
+    invoke<void>("set_setting", { key, value }),
+  listStaff: (role: StaffRole) => invoke<StaffMember[]>("list_staff", { role }),
+  upsertStaff: (member: StaffMember) =>
+    invoke<StaffMember>("upsert_staff", { member }),
+  deleteStaff: (id: number) => invoke<void>("delete_staff", { id }),
+
+  listTpCompanies: () => invoke<TpCompany[]>("list_tp_companies"),
+  upsertTpCompany: (company: TpCompany) =>
+    invoke<TpCompany>("upsert_tp_company", { company }),
+  deleteTpCompany: (id: number) => invoke<void>("delete_tp_company", { id }),
+  reorderTpCompanies: (orderedIds: number[]) =>
+    invoke<void>("reorder_tp_companies", { orderedIds }),
+
+  getGridValues: (subcontractorId: number) =>
+    invoke<Record<string, string>>("get_grid_values", { subcontractorId }),
+  setGridValue: (subcontractorId: number, columnKey: string, value: string) =>
+    invoke<void>("set_grid_value", { subcontractorId, columnKey, value }),
+  getGridValuesForProject: (projectId: number) =>
+    invoke<Record<number, Record<string, string>>>("get_grid_values_for_project", {
+      projectId,
+    }),
+  bulkSetGridValues: (subcontractorId: number, values: Record<string, string>) =>
+    invoke<void>("bulk_set_grid_values", { subcontractorId, values }),
+
+  bulkSetFieldValues: (subcontractorId: number, values: Record<string, string>) =>
+    invoke<void>("bulk_set_field_values", { subcontractorId, values }),
 };
+
+export interface TpCompany {
+  id: number;
+  company: string;
+  legal_name_register: string | null;
+  nzbn: string | null;
+  legal_name_nzbn: string | null;
+  address_1: string | null;
+  address_2: string | null;
+  address_3: string | null;
+  city: string | null;
+  zip: string | null;
+  full_address: string | null;
+  business_phone: string | null;
+  email: string | null;
+  directors: string | null;
+  trades: string | null;
+  standard_cost_code: string | null;
+  ordering: number;
+}
+
+export type StaffRole = "PM" | "BTM" | "QS";
+
+export interface StaffMember {
+  id: number;
+  role: StaffRole;
+  name: string;
+  mobile: string | null;
+  email: string | null;
+  ordering: number;
+}
 
 export interface ImportReport {
   columns: string[];
@@ -69,6 +135,11 @@ export interface ImportReport {
   unknown: string[];
   has_id_column: boolean;
   row_count: number;
+}
+
+export interface ParsedCsv {
+  columns: string[];
+  rows: string[][];
 }
 
 export interface ImportResult {

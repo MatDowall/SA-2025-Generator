@@ -7,6 +7,7 @@ import type {
   PDFDocumentProxy,
   PDFDocumentLoadingTask,
 } from "pdfjs-dist";
+import { LOCKED_PDF_FIELDS } from "./lib/csvReverseMap";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
@@ -92,7 +93,10 @@ export async function getPageLayout(
         top: Math.min(y1, y2),
         width: Math.abs(x2 - x1),
         height: Math.abs(y2 - y1),
-        readOnly: !!a.readOnly,
+        // Fields that mirror a grid dropdown/Subcontractor-name column can
+        // only be edited through that constrained control on the
+        // Subcontractor Details grid — see LOCKED_PDF_FIELDS.
+        readOnly: !!a.readOnly || LOCKED_PDF_FIELDS.has(a.fieldName),
         multiline: !!a.multiLine,
         fontSize: a.defaultAppearanceData?.fontSize || undefined,
         options: a.options?.map((o: any) => ({

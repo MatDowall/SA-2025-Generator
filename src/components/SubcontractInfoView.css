@@ -1,0 +1,45 @@
+.subinfo {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.subinfo__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Each tab's content fills the body viewport; height:100% on grandchildren
+   (e.g. TpCompaniesGrid's HotTable) resolves against this flex-determined
+   size rather than an ambiguous percentage chain through a non-flex parent. */
+.subinfo__body > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.subinfo__placeholder {
+  max-width: 560px;
+  margin: 64px auto;
+  padding: 32px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  color: var(--text);
+}
+
+.subinfo__placeholder h2 {
+  margin-top: 0;
+}
+
+.subinfo__soon {
+  color: var(--text-muted);
+  font-style: italic;
+}

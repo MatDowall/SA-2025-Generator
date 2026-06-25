@@ -1,0 +1,24 @@
+.tpgrid {
+  height: 100%;
+  width: 100%;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  /* HotTable manages its own internal scrolling — avoid a second scrollbar
+     from the generic .subinfo__body > * rule. */
+  overflow: hidden !important;
+}
+
+/* Handsontable's wrapper renders one direct child div, which holds the
+   actual table — flex-grow it so it isn't sized via an ambiguous
+   percentage-height chain through non-flex ancestors. */
+.tpgrid > div {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tpgrid__loading {
+  padding: 24px;
+  color: var(--text-muted);
+  text-align: center;
+}

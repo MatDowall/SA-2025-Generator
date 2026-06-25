@@ -1,17 +1,18 @@
-// CSV import (Milestone 5). Reads a CSV whose first column identifies the
-// subcontractor and whose remaining columns are AcroForm field names. Rows are
-// matched to existing subcontractors by name (created if missing); recognised
-// field columns are written to field_values.
+// CSV import. Reads a CSV whose first column identifies the subcontractor and
+// whose remaining columns are AcroForm field names. Parsing only happens
+// here (analyze_import_csv for the preview, parse_import_csv for the actual
+// commit) — the frontend's CSV reverse-map (src/lib/csvReverseMap.ts) does
+// subcontractor matching/creation and writes into subcontractor_grid_values /
+// contract_info_values, since those are now the single source of truth
+// field_values is computed from (see useMappingRecompute). This file no
+// longer writes to field_values directly.
 //
 // The header is located by scanning for the `Subcontractor` row, so an optional
 // type-hint row above it (written by export) is skipped, and older files
 // without that row still import.
-use crate::db::Db;
 use crate::export::ID_COLUMN;
-use rusqlite::params;
 use serde::Serialize;
 use std::collections::HashSet;
-use tauri::State;
 
 fn map_err<E: std::fmt::Display>(e: E) -> String {
     e.to_string()
@@ -116,116 +117,30 @@ pub fn analyze_import_csv(app: tauri::AppHandle, path: String) -> Result<ImportR
 }
 
 #[derive(Serialize)]
-pub struct ImportResult {
-    pub created: usize,
-    pub updated: usize,
-    pub fields_set: usize,
-    pub unknown_columns: Vec<String>,
+pub struct ParsedCsv {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<String>>,
 }
 
-/// Commit the import into `project_id`. Rows matched to existing subcontractors
-/// (by name, case-insensitive) are updated; otherwise a new subcontractor is
-/// created. Only recognised field columns are written.
+/// Parses the CSV into raw {columns, rows} with no DB writes at all — the
+/// frontend's CSV reverse-map (see src/lib/csvReverseMap.ts) does the actual
+/// subcontractor matching/creation and reverse-mapped writes into
+/// subcontractor_grid_values / contract_info_values, since the grid + Contract
+/// Info are now the single source of truth field_values is computed from
+/// (see useMappingRecompute) — CSV import is just another way to fill those
+/// in, not a parallel writer of field_values.
 #[tauri::command]
-pub fn import_project_csv(
-    app: tauri::AppHandle,
-    state: State<'_, Db>,
-    project_id: i64,
-    path: String,
-) -> Result<ImportResult, String> {
-    let valid = valid_field_names(&app)?;
+pub fn parse_import_csv(path: String) -> Result<ParsedCsv, String> {
     let records = read_records(&path)?;
     let header_idx = find_header(&records).ok_or_else(|| {
         format!("No \"{ID_COLUMN}\" header column found — this doesn't look like a SA-2025 export.")
     })?;
-    let header = &records[header_idx];
-
-    // Columns that map to real fields (skip column 0 = identifier).
-    let field_cols: Vec<(usize, String)> = header
+    let columns: Vec<String> = records[header_idx].iter().map(|s| s.to_string()).collect();
+    let rows: Vec<Vec<String>> = records[header_idx + 1..]
         .iter()
-        .enumerate()
-        .skip(1)
-        .filter(|(_, name)| valid.contains(*name))
-        .map(|(i, name)| (i, name.to_string()))
+        .filter(|r| r.get(0).map(|c| !c.trim().is_empty()).unwrap_or(false))
+        .map(|r| r.iter().map(|s| s.to_string()).collect())
         .collect();
-    let unknown_columns: Vec<String> = header
-        .iter()
-        .skip(1)
-        .filter(|name| !valid.contains(*name))
-        .map(|s| s.to_string())
-        .collect();
-
-    let mut conn = state.0.lock().map_err(map_err)?;
-    let tx = conn.transaction().map_err(map_err)?;
-
-    let mut created = 0usize;
-    let mut updated = 0usize;
-    let mut fields_set = 0usize;
-
-    for record in &records[header_idx + 1..] {
-        let sub_name = record.get(0).unwrap_or("").trim().to_string();
-        if sub_name.is_empty() {
-            continue;
-        }
-
-        let existing: Option<i64> = tx
-            .query_row(
-                "SELECT id FROM subcontractors WHERE project_id = ?1 \
-                 AND name = ?2 COLLATE NOCASE",
-                params![project_id, sub_name],
-                |r| r.get(0),
-            )
-            .ok();
-
-        let sub_id = match existing {
-            Some(id) => {
-                updated += 1;
-                id
-            }
-            None => {
-                let ordering: i64 = tx
-                    .query_row(
-                        "SELECT COALESCE(MAX(ordering), -1) + 1 FROM subcontractors WHERE project_id = ?1",
-                        params![project_id],
-                        |r| r.get(0),
-                    )
-                    .map_err(map_err)?;
-                tx.execute(
-                    "INSERT INTO subcontractors (project_id, name, ordering) VALUES (?1, ?2, ?3)",
-                    params![project_id, sub_name, ordering],
-                )
-                .map_err(map_err)?;
-                created += 1;
-                tx.last_insert_rowid()
-            }
-        };
-
-        for (col_idx, field_name) in &field_cols {
-            let value = record.get(*col_idx).unwrap_or("").to_string();
-            if value.is_empty() {
-                tx.execute(
-                    "DELETE FROM field_values WHERE subcontractor_id = ?1 AND field_name = ?2",
-                    params![sub_id, field_name],
-                )
-                .map_err(map_err)?;
-            } else {
-                tx.execute(
-                    "INSERT INTO field_values (subcontractor_id, field_name, value) VALUES (?1, ?2, ?3) \
-                     ON CONFLICT(subcontractor_id, field_name) DO UPDATE SET value = excluded.value",
-                    params![sub_id, field_name, value],
-                )
-                .map_err(map_err)?;
-                fields_set += 1;
-            }
-        }
-    }
-
-    tx.commit().map_err(map_err)?;
-
-    Ok(ImportResult {
-        created,
-        updated,
-        fields_set,
-        unknown_columns,
-    })
+    Ok(ParsedCsv { columns, rows })
 }
+

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MenuBar, type MenuDef } from "./components/MenuBar";
+import { TabBar } from "./components/TabBar";
+import { SubcontractInfoView } from "./components/SubcontractInfoView";
 import { Sidebar } from "./components/Sidebar";
 import { PdfViewer, type PdfViewerHandle } from "./components/PdfViewer";
 import { StatusBar } from "./components/StatusBar";
@@ -11,11 +13,17 @@ import { ExportCsvModal } from "./components/ExportCsvModal";
 import { ImportCsvModal } from "./components/ImportCsvModal";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { AboutModal } from "./components/AboutModal";
+import { SettingsModal } from "./components/SettingsModal";
+import { ImportProgressOverlay } from "./components/ImportProgressOverlay";
 import {
   ExportPdfModal,
   type ExportScope,
   type ExportFormat,
 } from "./components/ExportPdfModal";
+import { useDebouncedFieldSave } from "./hooks/useDebouncedFieldSave";
+import { useMappingRecompute } from "./hooks/useMappingRecompute";
+import { importCsvIntoProject } from "./lib/csvImport";
+import { applyFieldEdit } from "./lib/csvReverseMap";
 import { fillTemplate } from "./pdfFill";
 import { zipSync } from "fflate";
 import {
@@ -48,11 +56,17 @@ type Dialog =
   | { kind: "exportPdf" }
   | { kind: "importReport"; path: string; report: ImportReport }
   | { kind: "error"; title: string; message: string }
-  | { kind: "about" };
+  | { kind: "about" }
+  | { kind: "settings" };
 
 const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]/g, "_").trim();
 
+type AppTab = "pdf" | "subcontract-info";
+
 function App() {
+  // Top-level tabs
+  const [activeTab, setActiveTab] = useState<AppTab>("pdf");
+
   // Layout
   const [sidebarPct, setSidebarPct] = useState(30);
   const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -71,6 +85,16 @@ function App() {
   const [activeSubId, setActiveSubId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
   const close = () => setDialog({ kind: "none" });
+  const [importProgress, setImportProgress] = useState<
+    { current: number; total: number; phase?: "importing" | "recomputing" } | null
+  >(null);
+
+  // Recomputes field_values from Contract Info + Subcontractor Details
+  // (the single source of truth) — lives here, not inside SubcontractInfoView,
+  // so it stays active (and reachable from e.g. CSV import) regardless of
+  // which top-level tab is showing.
+  const { recompute: recomputeFieldValues, recomputeNow: recomputeFieldValuesNow } =
+    useMappingRecompute(project, subs);
 
   // Surface a thrown error to the user instead of failing silently.
   const reportError = (title: string, e: unknown) => {
@@ -90,59 +114,62 @@ function App() {
     };
 
   // Active subcontractor's form values (shown/edited on the PDF overlay).
-  const [values, setValues] = useState<Record<string, string>>({});
-  const valuesRef = useRef<Record<string, string>>({});
-  const activeIdRef = useRef<number | null>(null);
-  const pendingRef = useRef<Set<string>>(new Set());
-  const flushTimer = useRef<number | null>(null);
+  const {
+    values,
+    onFieldChange,
+    load: loadValues,
+    flush: flushPending,
+    activeIdRef,
+    pendingRef,
+  } = useDebouncedFieldSave(activeSubId, api.getFieldValues, api.setFieldValue);
 
-  const loadValues = useCallback(async (subId: number | null) => {
-    activeIdRef.current = subId;
-    if (subId == null) {
-      setValues({});
-      valuesRef.current = {};
-      return;
-    }
-    const v = await api.getFieldValues(subId);
-    // If the user switched away while loading, drop this stale result.
-    if (activeIdRef.current !== subId) return;
-    // Preserve any edits made to this same sub while the load was in flight.
-    const merged = { ...v };
-    for (const name of pendingRef.current) {
-      merged[name] = valuesRef.current[name] ?? "";
-    }
-    setValues(merged);
-    valuesRef.current = merged;
-  }, []);
+  // The PDF overlay is directly editable, but field_values is otherwise
+  // purely computed from Contract Info + Subcontractor Details — without
+  // this, a PDF-direct edit would just get silently overwritten by the next
+  // recompute. Mirror any edit that has a reverse-map target back into the
+  // grid/Contract Info so the two stay in sync regardless of which surface
+  // the user actually typed into.
+  // Keyed by field name — a single shared timer would let editing field B
+  // cancel field A's still-pending sync (e.g. tabbing through several PDF
+  // fields inside one debounce window), silently dropping A's write.
+  const pdfReverseSyncTimers = useRef<Map<string, number>>(new Map());
+  const onPdfFieldChange = useCallback(
+    (name: string, value: string) => {
+      onFieldChange(name, value);
+      const existing = pdfReverseSyncTimers.current.get(name);
+      if (existing) clearTimeout(existing);
+      pdfReverseSyncTimers.current.set(
+        name,
+        window.setTimeout(() => {
+          pdfReverseSyncTimers.current.delete(name);
+          const grid: Record<string, string> = {};
+          const contractInfo: Record<string, string> = {};
+          applyFieldEdit(name, value, grid, contractInfo, true);
+          const gridEntries = Object.entries(grid);
+          const ciEntries = Object.entries(contractInfo);
+          if (gridEntries.length === 0 && ciEntries.length === 0) return;
+          if (activeSubId) {
+            for (const [key, v] of gridEntries) void api.setGridValue(activeSubId, key, v);
+          }
+          if (project) {
+            for (const [key, v] of ciEntries) void api.setContractInfoValue(project.id, key, v);
+          }
+          recomputeFieldValues();
+        }, 350),
+      );
+    },
+    [onFieldChange, activeSubId, project, recomputeFieldValues],
+  );
 
-  // Write pending edits for a given subcontractor to the database.
-  const flushPending = useCallback(async (subId: number | null) => {
-    if (flushTimer.current) {
-      clearTimeout(flushTimer.current);
-      flushTimer.current = null;
-    }
-    if (subId == null || pendingRef.current.size === 0) return;
-    // Snapshot the values now — valuesRef may be reassigned by a subcontractor
-    // switch before these awaits resolve.
-    const snapshot = valuesRef.current;
-    const pairs = [...pendingRef.current].map(
-      (name) => [name, snapshot[name] ?? ""] as const,
-    );
-    pendingRef.current.clear();
-    for (const [name, value] of pairs) {
-      await api.setFieldValue(subId, name, value);
-    }
-  }, []);
-
-  // Load values when the active subcontractor changes; flush the outgoing one.
+  // The Subcontract Info recompute pipeline writes fresh field_values in the
+  // background while the user is on that tab — useDebouncedFieldSave only
+  // reloads when activeSubId itself changes, so without this the PDF tab
+  // would keep showing stale values after switching back without having
+  // changed which subcontractor is active.
   useEffect(() => {
-    loadValues(activeSubId);
-    const outgoing = activeSubId;
-    return () => {
-      void flushPending(outgoing);
-    };
+    if (activeTab === "pdf") void loadValues(activeSubId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSubId]);
+  }, [activeTab]);
 
   // Persist any unsaved edits before the window closes (the debounce may not
   // have fired yet for the active subcontractor).
@@ -158,23 +185,7 @@ function App() {
       })
       .then((u) => (unlisten = u));
     return () => unlisten?.();
-  }, [flushPending]);
-
-  const onFieldChange = useCallback(
-    (name: string, value: string) => {
-      setValues((v) => {
-        const next = { ...v, [name]: value };
-        valuesRef.current = next;
-        return next;
-      });
-      pendingRef.current.add(name);
-      if (flushTimer.current) clearTimeout(flushTimer.current);
-      flushTimer.current = window.setTimeout(() => {
-        void flushPending(activeSubId);
-      }, 350);
-    },
-    [activeSubId, flushPending],
-  );
+  }, [flushPending, pendingRef, activeIdRef]);
 
   const openProject = useCallback(async (p: Project) => {
     const list = await api.listSubcontractors(p.id);
@@ -237,6 +248,22 @@ function App() {
     );
     close();
   };
+  // Used by the Subcontractor Details grid, which is itself a valid entry
+  // point for creating/renaming subcontractors (typing a name into a blank
+  // row), not just the Sidebar's "Add Subcontractor" dialog.
+  const createSubcontractorByName = useCallback(
+    async (name: string) => {
+      if (!project) throw new Error("No project open");
+      const s = await api.addSubcontractor(project.id, name);
+      setSubs((prev) => [...prev, s]);
+      return s;
+    },
+    [project],
+  );
+  const renameSubcontractorByName = useCallback(async (id: number, name: string) => {
+    await api.renameSubcontractor(id, name);
+    setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, name: name.trim() } : s)));
+  }, []);
   const deleteSub = async (s: Subcontractor) => {
     await api.deleteSubcontractor(s.id);
     setSubs((prev) => prev.filter((x) => x.id !== s.id));
@@ -292,21 +319,32 @@ function App() {
 
   const commitImport = guard("CSV import failed", async (path: string) => {
     if (!project) return;
-    const res = await api.importProjectCsv(project.id, path);
-    const list = await api.listSubcontractors(project.id);
-    setSubs(list);
-    if (activeSubId && list.some((s) => s.id === activeSubId)) {
-      await loadValues(activeSubId);
-    } else {
-      setActiveSubId(list[0]?.id ?? null);
+    close(); // dismiss the report dialog — the progress overlay takes over
+    try {
+      const parsed = await api.parseImportCsv(path);
+      setImportProgress({ current: 0, total: parsed.rows.length });
+      const res = await importCsvIntoProject(project, subs, parsed, (current, total) =>
+        setImportProgress({ current, total }),
+      );
+      const list = await api.listSubcontractors(project.id);
+      setSubs(list);
+      if (activeSubId && list.some((s) => s.id === activeSubId)) {
+        await loadValues(activeSubId);
+      } else {
+        setActiveSubId(list[0]?.id ?? null);
+      }
+      // Keep the overlay up through this — it rebuilds the whole HyperFormula
+      // engine across every subcontractor and can take real time, so it must
+      // stay awaited under the same busy indicator rather than being kicked
+      // off via the normal fire-and-forget debounced recompute.
+      setImportProgress({ current: parsed.rows.length, total: parsed.rows.length, phase: "recomputing" });
+      await recomputeFieldValuesNow();
+      setStatus(
+        `Imported: ${res.created} created, ${res.updated} updated, ${res.fields_set} values set`,
+      );
+    } finally {
+      setImportProgress(null);
     }
-    close();
-    setStatus(
-      `Imported: ${res.created} created, ${res.updated} updated, ${res.fields_set} values set` +
-        (res.unknown_columns.length
-          ? ` · ${res.unknown_columns.length} column(s) ignored`
-          : ""),
-    );
   });
 
   // Export CSV: prompt for a save location, then write via the backend.
@@ -473,6 +511,10 @@ function App() {
       ],
     },
     {
+      label: "Settings",
+      items: [{ label: "Settings…", action: () => setDialog({ kind: "settings" }) }],
+    },
+    {
       label: "Help",
       items: [{ label: "About SA-2025 Generator", action: () => setDialog({ kind: "about" }) }],
     },
@@ -484,46 +526,66 @@ function App() {
     <div className="app">
       <UpdateBanner />
       <MenuBar menus={menus} />
+      <TabBar
+        tabs={[
+          { key: "pdf", label: "PDF" },
+          { key: "subcontract-info", label: "Subcontract Info" },
+        ]}
+        active={activeTab}
+        onSelect={setActiveTab}
+      />
 
-      <div className="app__main" ref={mainRef}>
-        {sidebarVisible && (
-          <>
-            <div className="app__sidebar" style={{ width: `${sidebarPct}%` }}>
-              <Sidebar
-                project={project}
-                subcontractors={subs}
-                activeId={activeSubId}
-                onNewProject={() => setDialog({ kind: "newProject" })}
-                onOpenProject={() => setDialog({ kind: "openProject" })}
-                onRenameProject={() => setDialog({ kind: "renameProject" })}
-                onSelect={setActiveSubId}
-                onAddSubcontractor={() => setDialog({ kind: "addSub" })}
-                onRenameSubcontractor={(s) => setDialog({ kind: "renameSub", sub: s })}
-                onDeleteSubcontractor={(s) => setDialog({ kind: "confirmDeleteSub", sub: s })}
+      {activeTab === "pdf" && (
+        <div className="app__main" ref={mainRef}>
+          {sidebarVisible && (
+            <>
+              <div className="app__sidebar" style={{ width: `${sidebarPct}%` }}>
+                <Sidebar
+                  project={project}
+                  subcontractors={subs}
+                  activeId={activeSubId}
+                  onNewProject={() => setDialog({ kind: "newProject" })}
+                  onOpenProject={() => setDialog({ kind: "openProject" })}
+                  onRenameProject={() => setDialog({ kind: "renameProject" })}
+                  onSelect={setActiveSubId}
+                  onAddSubcontractor={() => setDialog({ kind: "addSub" })}
+                  onRenameSubcontractor={(s) => setDialog({ kind: "renameSub", sub: s })}
+                  onDeleteSubcontractor={(s) => setDialog({ kind: "confirmDeleteSub", sub: s })}
+                />
+              </div>
+              <div
+                className="app__splitter"
+                onMouseDown={onSplitterDown}
+                role="separator"
+                aria-orientation="vertical"
+                title="Drag to resize"
               />
-            </div>
-            <div
-              className="app__splitter"
-              onMouseDown={onSplitterDown}
-              role="separator"
-              aria-orientation="vertical"
-              title="Drag to resize"
+            </>
+          )}
+          <div className="app__canvas">
+            <PdfViewer
+              ref={viewerRef}
+              zoom={zoom}
+              values={values}
+              editable={activeSubId != null}
+              onFieldChange={onPdfFieldChange}
+              onLoaded={onDocLoaded}
+              onPageChange={setPage}
+              onError={onViewerError}
             />
-          </>
-        )}
-        <div className="app__canvas">
-          <PdfViewer
-            ref={viewerRef}
-            zoom={zoom}
-            values={values}
-            editable={activeSubId != null}
-            onFieldChange={onFieldChange}
-            onLoaded={onDocLoaded}
-            onPageChange={setPage}
-            onError={onViewerError}
-          />
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === "subcontract-info" && (
+        <SubcontractInfoView
+          project={project}
+          subs={subs}
+          onCreateSubcontractor={createSubcontractorByName}
+          onRenameSubcontractor={renameSubcontractorByName}
+          onChanged={recomputeFieldValues}
+        />
+      )}
 
       <StatusBar
         page={page}
@@ -658,6 +720,15 @@ function App() {
       )}
 
       {dialog.kind === "about" && <AboutModal onClose={close} />}
+      {dialog.kind === "settings" && <SettingsModal onClose={close} />}
+
+      {importProgress && (
+        <ImportProgressOverlay
+          current={importProgress.current}
+          total={importProgress.total}
+          phase={importProgress.phase}
+        />
+      )}
     </div>
   );
 }

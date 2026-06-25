@@ -1,0 +1,63 @@
+.sdgrid {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sdgrid__formulabar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+.sdgrid__formulabar-label {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sdgrid__formulabar-input {
+  flex: 1 1 auto;
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.sdgrid__table {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Handsontable's wrapper renders one direct child div holding the actual
+   table — flex-grow it so it isn't sized via an ambiguous percentage-height
+   chain through non-flex ancestors (see TpCompaniesGrid.css for why). */
+.sdgrid__table > div {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.htComputedColumn {
+  background: var(--bg-hover) !important;
+  color: var(--text-muted);
+}
+
+.sdgrid__loading {
+  padding: 24px;
+  color: var(--text-muted);
+  text-align: center;
+}

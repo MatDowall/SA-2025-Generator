@@ -1,10 +1,15 @@
+mod compute;
+mod contract_info;
 mod db;
 mod export;
 mod fieldmap;
 mod files;
+mod grid_values;
 mod import;
 mod projectfile;
 mod projects;
+mod settings;
+mod tp_companies;
 
 use db::Db;
 use std::sync::Mutex;
@@ -90,6 +95,40 @@ pub fn run() {
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
             let conn = db::init(&dir.join("sa2025.sqlite"))?;
+
+            // One-time seed of settings/staff_directory from the bundled
+            // legacy-workbook defaults, if the tables are still empty.
+            match app.path().resolve(
+                "resources/settings-seed.json",
+                tauri::path::BaseDirectory::Resource,
+            ) {
+                Ok(seed_path) => match std::fs::read_to_string(&seed_path) {
+                    Ok(seed_json) => {
+                        if let Err(e) = settings::seed_settings_if_empty(&conn, &seed_json) {
+                            eprintln!("settings seed failed: {e}");
+                        }
+                    }
+                    Err(e) => eprintln!("could not read {}: {e}", seed_path.display()),
+                },
+                Err(e) => eprintln!("could not resolve settings-seed.json: {e}"),
+            }
+
+            // Same idempotent seed pattern for the TP Companies directory.
+            match app.path().resolve(
+                "resources/tp-companies-seed.json",
+                tauri::path::BaseDirectory::Resource,
+            ) {
+                Ok(seed_path) => match std::fs::read_to_string(&seed_path) {
+                    Ok(seed_json) => {
+                        if let Err(e) = tp_companies::seed_tp_companies_if_empty(&conn, &seed_json) {
+                            eprintln!("tp_companies seed failed: {e}");
+                        }
+                    }
+                    Err(e) => eprintln!("could not read {}: {e}", seed_path.display()),
+                },
+                Err(e) => eprintln!("could not resolve tp-companies-seed.json: {e}"),
+            }
+
             app.manage(Db(Mutex::new(conn)));
             Ok(())
         })
@@ -114,10 +153,28 @@ pub fn run() {
             projects::set_field_value,
             export::export_project_csv,
             import::analyze_import_csv,
-            import::import_project_csv,
+            import::parse_import_csv,
             files::write_binary_file,
             projectfile::export_project_file,
             projectfile::import_project_file,
+            contract_info::get_contract_info,
+            contract_info::set_contract_info_value,
+            contract_info::set_contract_info_bulk,
+            settings::get_settings,
+            settings::set_setting,
+            settings::list_staff,
+            settings::upsert_staff,
+            settings::delete_staff,
+            tp_companies::list_tp_companies,
+            tp_companies::upsert_tp_company,
+            tp_companies::delete_tp_company,
+            tp_companies::seed_tp_companies,
+            tp_companies::reorder_tp_companies,
+            grid_values::get_grid_values,
+            grid_values::set_grid_value,
+            grid_values::get_grid_values_for_project,
+            grid_values::bulk_set_grid_values,
+            compute::bulk_set_field_values,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

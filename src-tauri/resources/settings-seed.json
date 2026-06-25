@@ -1,0 +1,211 @@
+{
+  "scalars": {
+    "company_name": "Cook Brothers Construction",
+    "company_address_1": "6 Hanover Street",
+    "company_address_2": "Dunedin, 9024"
+  },
+  "lists": {
+    "list_sub_trades": [
+      "Asbestos Removal",
+      "Autex Lining",
+      "Blockwork",
+      "Brickwork",
+      "Carpentry Subcontractors",
+      "Concrete Cutting",
+      "Concrete Work",
+      "Craneage",
+      "Data Services",
+      "Demolition",
+      "Drainage",
+      "Electrical / Fire Alarm Services",
+      "Excavation",
+      "Fencing",
+      "Fibrous Plaster",
+      "Fire Alarms Services",
+      "Fire Doors",
+      "Fire Sprinkler Services",
+      "Fire Protection Services",
+      "Floor Coverings",
+      "Glazing",
+      "Metal Ceilings",
+      "Hardware",
+      "Helifix Ties",
+      "Hydraulics",
+      "Hydraulics & Mechanical",
+      "Insulated Panel",
+      "Joinery",
+      "Kingspan Roofing",
+      "Landscaping",
+      "Lifts",
+      "Louvres",
+      "Mechanical Services",
+      "Membrane Roofing",
+      "Metal Roofing",
+      "Metal Windows & Doors",
+      "Metalwork",
+      "Painting",
+      "Passive Fire",
+      "Piling",
+      "Plasterboard Linings",
+      "Plumbing",
+      "Precast Concrete",
+      "Prestressed Flooring",
+      "Reinforcing",
+      "Rolling Shutter Door",
+      "Roof Safety Systems",
+      "Scaffolding & Propping",
+      "Sealants",
+      "Security Services",
+      "Shotcrete Concrete",
+      "Signage",
+      "Siteworks",
+      "Solid Plaster",
+      "Special Floor Finish",
+      "Specialist Coating",
+      "Steel Partitioning",
+      "Stone Masonry",
+      "Plasterboard Stopping",
+      "Structural Steel",
+      "Tanking",
+      "Tile Roofing",
+      "Tiling",
+      "Timber Doors & Frames",
+      "Toilet Partitions",
+      "Underfloor Heating",
+      "Window Treatments",
+      "Wood Joinery"
+    ],
+    "list_retentions": [
+      "Nil",
+      "5% on the first $200,000, and 2.5% on the next $800,000 and 0.87% on amounts in excess of $1,000,000, and with a maximum total retention when aggregated of $500,000.",
+      "10% on the first 200,000; and 5% on the next 800,000. Plus 1.75% of any amount in excess of $1,000,000 with a maximum total retention when aggregated of $200,000; and with a defects liability retention of 50% of the total retention"
+    ],
+    "list_defect_period": [
+      "N/A",
+      "50",
+      "100"
+    ],
+    "list_misc": [
+      "Yes",
+      "No",
+      "N/A",
+      "To Follow"
+    ],
+    "list_mats_off_site": [
+      "Conditions: Signed Schedule 14 with photos labelled with Client & project and damage & transit insurance certificates."
+    ],
+    "list_head_contracts": [
+      "NZS 3915-2005",
+      "NZS 3910-2013",
+      "NZS 3916-2013"
+    ]
+  },
+  "staff": {
+    "PM": [
+      {
+        "name": "Blair Stuart",
+        "mobile": "021 225 6561",
+        "email": "blair.stuart@cookbrothers.co.nz"
+      },
+      {
+        "name": "Tyerell Robinson",
+        "mobile": "021 478 288",
+        "email": "tyerell.robinson@cookbrothers.co.nz"
+      },
+      {
+        "name": "Spencer Eve",
+        "mobile": "027 677 785",
+        "email": "spencer.eve@cookbrothers.co.nz"
+      },
+      {
+        "name": "Steve Jory",
+        "mobile": "027 431 6703",
+        "email": "steve.jory@cookbrothers.co.nz"
+      }
+    ],
+    "BTM": [
+      {
+        "name": "Ben Chapman",
+        "mobile": "027 766 1618",
+        "email": "ben.chapman@cookbrothers.co.nz"
+      },
+      {
+        "name": "Bradely Eve",
+        "mobile": "021 022 28669",
+        "email": "bradely.eve@cookbrothers.co.nz"
+      },
+      {
+        "name": "Craig Burr",
+        "mobile": "021 994 137",
+        "email": "craig.burr@cookbrothers.co.nz"
+      },
+      {
+        "name": "James Feather",
+        "mobile": "021 190 7126",
+        "email": "james.feather@cookbrothers.co.nz"
+      },
+      {
+        "name": "Jon Geary",
+        "mobile": "027 641 5855",
+        "email": "jon.geary@cookbrothers.co.nz"
+      },
+      {
+        "name": "Nigel Roulston",
+        "mobile": "021 229 9632",
+        "email": "nigel.roulston@cookbrothers.co.nz"
+      },
+      {
+        "name": "Sam Harris",
+        "mobile": "021 191 9108",
+        "email": "sam.harris@cookbrothers.co.nz"
+      },
+      {
+        "name": "Scott Milne",
+        "mobile": "021 499 731",
+        "email": "scott.milne@cookbrothers.co.nz"
+      },
+      {
+        "name": "Steve Jory",
+        "mobile": "027 431 6703",
+        "email": "steve.jory@cookbrothers.co.nz"
+      },
+      {
+        "name": "Hayden Symons",
+        "mobile": "027 363 2867",
+        "email": "hayden.symons@cookbrothers.co.nz"
+      },
+      {
+        "name": "Tim Reid",
+        "mobile": "021 407 694",
+        "email": "tim.reid@cookbrothers.co.nz"
+      }
+    ],
+    "QS": [
+      {
+        "name": "Zach Pronk",
+        "mobile": "022 199 8528",
+        "email": "zach.pronk@cookbrothers.co.nz"
+      },
+      {
+        "name": "Mat Dowall",
+        "mobile": "021 226 6604",
+        "email": "mat.dowall@cookbrothers.co.nz"
+      },
+      {
+        "name": "Spencer Eve",
+        "mobile": "027 677 7859",
+        "email": "spencer.eve@cookbrothers.co.nz"
+      },
+      {
+        "name": "Blair McGill",
+        "mobile": "027 658 9870",
+        "email": "blair.mcgill@cookbrothers.co.nz"
+      },
+      {
+        "name": "Sally Cooper",
+        "mobile": "022 015 7468",
+        "email": "sally.cooper@cookbrothers.co.nz"
+      }
+    ]
+  }
+}

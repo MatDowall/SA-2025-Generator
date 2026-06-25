@@ -1,0 +1,70 @@
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings__section h4 {
+  margin: 0 0 10px;
+}
+
+.settings__sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.settings__sectionhead h4 {
+  margin: 0;
+}
+
+.settings__stafflist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings__staffrow {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.4fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings__staffdel {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.settings__staffdel:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.settings__empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 4px 0;
+}
+
+.settings__note {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.settings__lists {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings__listarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
