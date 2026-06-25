@@ -1,0 +1,48 @@
+.companymatch__searchterm {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+}
+
+.companymatch__status {
+  color: var(--text-muted);
+  padding: 8px 0;
+}
+
+.companymatch__status--error {
+  color: var(--danger, #c0392b);
+}
+
+.companymatch__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.companymatch__option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.companymatch__option:hover {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+}
+
+.companymatch__option input[type="radio"] {
+  margin-right: 6px;
+}
+
+.companymatch__name {
+  font-weight: 600;
+}
+
+.companymatch__meta {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  margin-left: 22px;
+}

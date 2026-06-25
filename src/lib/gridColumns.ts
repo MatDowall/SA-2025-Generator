@@ -14,7 +14,9 @@ export type GridColumnType =
   /** Read-only, computed live by HyperFormula (TP Address/Email, Contract Value). */
   | "computed"
   /** Read-only, mirrors a global Contract Info answer for every row. */
-  | "contract-info-mirror";
+  | "contract-info-mirror"
+  /** Read-only, auto-built from the Trade column + Settings sub-trade codes + Contract Info job number. */
+  | "cost-code";
 
 export interface GridColumn {
   letter: string;
@@ -30,7 +32,7 @@ export interface GridColumn {
 export const GRID_COLUMNS: GridColumn[] = [
   { letter: "A", key: "A_trade", title: "Trade", type: "dropdown", settingsListKey: "list_sub_trades" },
   { letter: "B", key: "B_subcontractor", title: "Subcontractor", type: "name-mirror" },
-  { letter: "C", key: "C_cost_code", title: "Cost Code\nE.G SC-DXX-601", type: "text" },
+  { letter: "C", key: "C_cost_code", title: "Code", type: "cost-code" },
   { letter: "D", key: "D_tp_address", title: "TP Address", type: "computed" },
   { letter: "E", key: "E_tp_email", title: "TP Email", type: "computed" },
   { letter: "F", key: "F_letter_of_award_date", title: "Letter of Award Date", type: "text" },

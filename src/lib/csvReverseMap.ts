@@ -34,7 +34,9 @@ export interface ReverseMapEntry {
 
 export const REVERSE_MAP: Record<string, ReverseMapEntry> = {
   // --- direct grid passthroughs ---
-  Subcontractor_Reference: { kind: "grid-direct", target: "C_cost_code" },
+  // Subcontractor_Reference (C_cost_code) is deliberately absent — it's now
+  // auto-built from Trade + Settings cost codes + Contract Info job number,
+  // not a free-text answer to import.
   Trade_Desc: { kind: "grid-direct", target: "A_trade" },
   DLP_Pct: { kind: "grid-direct", target: "T_dlp_percentage" },
   Misc_Other: { kind: "grid-direct", target: "BC_other_misc" },
@@ -293,4 +295,6 @@ export const LOCKED_PDF_FIELDS: ReadonlySet<string> = new Set([
   // the two Add/Omit values) are what gets edited instead.
   "Subcontract_Value",
   "Total_Subcontract_Sum",
+  // Mirrors the grid's app-derived Code column (C_cost_code) — same reasoning.
+  "Subcontractor_Reference",
 ]);

@@ -79,7 +79,8 @@ CREATE TABLE IF NOT EXISTS tp_companies (
     directors           TEXT,
     trades              TEXT,
     standard_cost_code  TEXT,
-    ordering            INTEGER NOT NULL DEFAULT 0
+    ordering            INTEGER NOT NULL DEFAULT 0,
+    is_active           INTEGER  -- NULL = not checked against the Companies Register yet, 1 = active, 0 = inactive
 );
 
 -- Generic global settings: company identity scalars and JSON-array reference
@@ -106,8 +107,23 @@ CREATE INDEX IF NOT EXISTS idx_contract_info_project ON contract_info_values(pro
 CREATE INDEX IF NOT EXISTS idx_staff_role ON staff_directory(role);
 "#;
 
+/// Adds `column` to `table` if an earlier release created the table without
+/// it — `CREATE TABLE IF NOT EXISTS` in SCHEMA above only covers fresh installs.
+fn ensure_column(conn: &Connection, table: &str, column: &str, decl: &str) -> rusqlite::Result<()> {
+    let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})"))?;
+    let exists = stmt
+        .query_map([], |r| r.get::<_, String>(1))?
+        .filter_map(|r| r.ok())
+        .any(|c| c == column);
+    if !exists {
+        conn.execute(&format!("ALTER TABLE {table} ADD COLUMN {column} {decl}"), [])?;
+    }
+    Ok(())
+}
+
 pub fn init(path: &std::path::Path) -> rusqlite::Result<Connection> {
     let conn = Connection::open(path)?;
     conn.execute_batch(SCHEMA)?;
+    ensure_column(&conn, "tp_companies", "is_active", "INTEGER")?;
     Ok(conn)
 }

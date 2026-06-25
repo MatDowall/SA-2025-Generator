@@ -6,6 +6,7 @@ mod fieldmap;
 mod files;
 mod grid_values;
 mod import;
+mod nzbn_api;
 mod projectfile;
 mod projects;
 mod settings;
@@ -170,6 +171,8 @@ pub fn run() {
             tp_companies::delete_tp_company,
             tp_companies::seed_tp_companies,
             tp_companies::reorder_tp_companies,
+            nzbn_api::search_nzbn_companies,
+            nzbn_api::apply_nzbn_match,
             grid_values::get_grid_values,
             grid_values::set_grid_value,
             grid_values::get_grid_values_for_project,

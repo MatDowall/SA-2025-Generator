@@ -1,6 +1,6 @@
 [package]
 name = "sa2025-generator"
-version = "0.2.1"
+version = "0.2.2"
 description = "SA-2025 Generator — Master Builders Subcontract Agreement generator"
 authors = ["you"]
 edition = "2021"
@@ -29,3 +29,4 @@ serde_json = "1"
 rusqlite = { version = "0.32", features = ["bundled"] }
 csv = "1"
 encoding_rs = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

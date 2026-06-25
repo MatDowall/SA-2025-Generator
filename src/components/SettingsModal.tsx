@@ -116,6 +116,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [companyName, setCompanyName] = useState("");
   const [companyAddr1, setCompanyAddr1] = useState("");
   const [companyAddr2, setCompanyAddr2] = useState("");
+  const [nzbnApiKey, setNzbnApiKey] = useState("");
+  const [nzbnApiEnv, setNzbnApiEnv] = useState("sandbox");
   const [lists, setLists] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -124,6 +126,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       setCompanyName(s.company_name ?? "");
       setCompanyAddr1(s.company_address_1 ?? "");
       setCompanyAddr2(s.company_address_2 ?? "");
+      setNzbnApiKey(s.nzbn_api_key ?? "");
+      setNzbnApiEnv(s.nzbn_api_environment || "sandbox");
       const listText: Record<string, string> = {};
       for (const { key } of LIST_FIELDS) {
         listText[key] = parseList(s[key]).join("\n");
@@ -194,6 +198,45 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           ))}
 
           <div className="settings__section">
+            <h4>NZ Companies Register API</h4>
+            <p className="settings__note">
+              Used by the "Check Companies Register" action in TP Companies to look up
+              NZBN, address, and active/inactive status. Get a subscription key from{" "}
+              <a href="https://portal.api.business.govt.nz/" target="_blank" rel="noreferrer">
+                portal.api.business.govt.nz
+              </a>{" "}
+              (NZBN API product).
+            </p>
+            <div className="form">
+              <div className="form__row">
+                <label className="form__label">Subscription key</label>
+                <input
+                  className="form__input"
+                  type="password"
+                  value={nzbnApiKey}
+                  onChange={(e) => setNzbnApiKey(e.target.value)}
+                  onBlur={(e) => saveScalar("nzbn_api_key", e.target.value)}
+                  placeholder="Ocp-Apim-Subscription-Key"
+                />
+              </div>
+              <div className="form__row">
+                <label className="form__label">Environment</label>
+                <select
+                  className="form__input"
+                  value={nzbnApiEnv}
+                  onChange={(e) => {
+                    setNzbnApiEnv(e.target.value);
+                    saveScalar("nzbn_api_environment", e.target.value);
+                  }}
+                >
+                  <option value="sandbox">Sandbox</option>
+                  <option value="production">Production</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="settings__section">
             <h4>Reference Lists</h4>
             <p className="settings__note">
               One option per line. These feed the Subcontract Info dropdowns.
@@ -202,6 +245,13 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               {LIST_FIELDS.map(({ key, label }) => (
                 <div className="form__row" key={key}>
                   <label className="form__label">{label}</label>
+                  {key === "list_sub_trades" && (
+                    <p className="settings__note">
+                      One trade per line, as <code>Trade,Cost Code</code> (e.g.{" "}
+                      <code>Plumbing,623</code>) — the cost code builds the grid's
+                      auto-generated Code column.
+                    </p>
+                  )}
                   <textarea
                     className="form__input settings__listarea"
                     value={lists[key] ?? ""}

@@ -4,6 +4,7 @@ import { registerAllModules } from "handsontable/registry";
 import type { CellChange, ChangeSource } from "handsontable/common";
 import { api, type Project, type Subcontractor, type TpCompany } from "../api";
 import { GRID_COLUMNS } from "../lib/gridColumns";
+import { buildCostCode, parseSubTrades } from "../lib/subTrades";
 import {
   createEngine,
   loadSubcontractorDetails,
@@ -55,6 +56,8 @@ export function SubcontractorDetailsGrid({
     Record<string, string[]>
   >({});
   const [tpCompanyNames, setTpCompanyNames] = useState<string[]>([]);
+  const [subTradeCodeByTrade, setSubTradeCodeByTrade] = useState<Record<string, string>>({});
+  const [jobNumber, setJobNumber] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
   const hotRef = useRef<HotTableRef>(null);
@@ -97,6 +100,32 @@ export function SubcontractorDetailsGrid({
           }
         }
 
+        const subTradeEntries = parseSubTrades(settings.list_sub_trades);
+        const codeByTrade: Record<string, string> = {};
+        for (const { trade, code } of subTradeEntries) codeByTrade[trade] = code;
+        // Contract Info's Job Number field only *displays* a fallback to the
+        // project's own number until the user types into it (see
+        // ContractInfoForm's displayValues) — api.getContractInfo returns the
+        // real stored value, which is empty in that case, so apply the same
+        // fallback here.
+        const job = contractInfo.job_number || project.project_number || "";
+
+        // The Code column is app-derived, not user-entered — recompute it
+        // from the current Trade + Settings cost codes + job number on every
+        // load (rather than trusting whatever was last persisted), and
+        // persist the correction so PDF generation picks up the same value.
+        for (const sub of subs) {
+          const values = gridValues[sub.id] ?? (gridValues[sub.id] = {});
+          const computedCode = buildCostCode(values.A_trade ?? "", job, codeByTrade);
+          if ((values.C_cost_code ?? "") !== computedCode) {
+            values.C_cost_code = computedCode;
+            void api.bulkSetGridValues(sub.id, { C_cost_code: computedCode });
+          }
+        }
+
+        setSubTradeCodeByTrade(codeByTrade);
+        setJobNumber(job);
+
         const engine = engineRef.current;
         tpRowCountRef.current = loadTpCompanies(engine, companies as TpCompany[]);
         const computed = loadSubcontractorDetails(
@@ -121,7 +150,7 @@ export function SubcontractorDetailsGrid({
         });
 
         setDropdownOptionsByListKey({
-          list_sub_trades: parseList(settings.list_sub_trades),
+          list_sub_trades: subTradeEntries.map((e) => e.trade),
           list_mats_off_site: parseList(settings.list_mats_off_site),
         });
         setTpCompanyNames((companies as TpCompany[]).map((c) => c.company));
@@ -152,7 +181,7 @@ export function SubcontractorDetailsGrid({
           } else {
             base.type = "checkbox";
           }
-        } else if (col.type === "computed") {
+        } else if (col.type === "computed" || col.type === "cost-code") {
           base.readOnly = true;
           base.className = "htComputedColumn";
         } else if (col.type === "dropdown") {
@@ -186,7 +215,8 @@ export function SubcontractorDetailsGrid({
     if (!hot || !changes || source === "loadData" || (source as string) === "sync") return;
     for (const [rowIndex, prop, oldValue, newValue] of changes) {
       const col = GRID_COLUMNS.find((c) => c.key === prop);
-      if (!col || col.type === "computed" || col.type === "contract-info-mirror") continue;
+      if (!col || col.type === "computed" || col.type === "contract-info-mirror" || col.type === "cost-code")
+        continue;
 
       const row = hot.getSourceDataAtRow(rowIndex) as GridRow | undefined;
       if (!row) continue;
@@ -239,6 +269,12 @@ export function SubcontractorDetailsGrid({
       hot.setSourceDataAtCell(rowIndex, "D_tp_address", computed.D_tp_address, "sync");
       hot.setSourceDataAtCell(rowIndex, "E_tp_email", computed.E_tp_email, "sync");
       hot.setSourceDataAtCell(rowIndex, "M_contract_value", computed.M_contract_value, "sync");
+
+      if (col.key === "A_trade") {
+        const newCode = buildCostCode(value, jobNumber, subTradeCodeByTrade);
+        hot.setSourceDataAtCell(rowIndex, "C_cost_code", newCode, "sync");
+        void api.setGridValue(row._subId, "C_cost_code", newCode).then(onChanged);
+      }
     }
   };
 

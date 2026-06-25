@@ -96,6 +96,11 @@ export const api = {
 
   bulkSetFieldValues: (subcontractorId: number, values: Record<string, string>) =>
     invoke<void>("bulk_set_field_values", { subcontractorId, values }),
+
+  searchNzbnCompanies: (query: string) =>
+    invoke<NzbnSearchResult[]>("search_nzbn_companies", { query }),
+  applyNzbnMatch: (companyId: number, nzbn: string) =>
+    invoke<TpCompany>("apply_nzbn_match", { companyId, nzbn }),
 };
 
 export interface TpCompany {
@@ -116,6 +121,14 @@ export interface TpCompany {
   trades: string | null;
   standard_cost_code: string | null;
   ordering: number;
+  // NULL = not checked against the Companies Register yet, 1 = active, 0 = inactive.
+  is_active: number | null;
+}
+
+export interface NzbnSearchResult {
+  nzbn: string;
+  name: string;
+  status: string | null;
 }
 
 export type StaffRole = "PM" | "BTM" | "QS";
