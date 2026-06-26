@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS tp_companies (
     trades              TEXT,
     standard_cost_code  TEXT,
     ordering            INTEGER NOT NULL DEFAULT 0,
-    is_active           INTEGER  -- NULL = not checked against the Companies Register yet, 1 = active, 0 = inactive
+    is_active           INTEGER,  -- NULL = not checked against the Companies Register yet, 1 = active, 0 = inactive
+    match_status        TEXT      -- NULL/'matched'/'ambiguous'/'not_found'/'error' — set by the register check flow
 );
 
 -- Generic global settings: company identity scalars and JSON-array reference
@@ -125,5 +126,6 @@ pub fn init(path: &std::path::Path) -> rusqlite::Result<Connection> {
     let conn = Connection::open(path)?;
     conn.execute_batch(SCHEMA)?;
     ensure_column(&conn, "tp_companies", "is_active", "INTEGER")?;
+    ensure_column(&conn, "tp_companies", "match_status", "TEXT")?;
     Ok(conn)
 }

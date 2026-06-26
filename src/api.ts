@@ -101,6 +101,7 @@ export const api = {
     invoke<NzbnSearchResult[]>("search_nzbn_companies", { query }),
   applyNzbnMatch: (companyId: number, nzbn: string) =>
     invoke<TpCompany>("apply_nzbn_match", { companyId, nzbn }),
+  bulkCheckTpCompanies: () => invoke<BulkCheckResult[]>("bulk_check_tp_companies"),
 };
 
 export interface TpCompany {
@@ -123,12 +124,24 @@ export interface TpCompany {
   ordering: number;
   // NULL = not checked against the Companies Register yet, 1 = active, 0 = inactive.
   is_active: number | null;
+  // NULL = not checked, "matched" = exact match applied, "ambiguous" = needs
+  // the user to pick a candidate, "not_found" = no candidates, "error" = the
+  // API call failed.
+  match_status: string | null;
 }
 
 export interface NzbnSearchResult {
   nzbn: string;
   name: string;
   status: string | null;
+}
+
+export interface BulkCheckResult {
+  id: number;
+  company: string;
+  outcome: "matched" | "ambiguous" | "not_found" | "error";
+  candidates: NzbnSearchResult[];
+  message: string | null;
 }
 
 export type StaffRole = "PM" | "BTM" | "QS";

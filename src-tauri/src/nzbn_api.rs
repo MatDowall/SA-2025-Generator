@@ -303,11 +303,13 @@ pub async fn apply_nzbn_match(
     ])
     .or(existing.full_address.clone());
     existing.is_active = derive_is_active(&detail.status);
+    existing.match_status = Some("matched".to_string());
 
     conn.execute(
         "UPDATE tp_companies SET legal_name_register = ?1, nzbn = ?2, legal_name_nzbn = ?3, \
          address_1 = ?4, address_2 = ?5, address_3 = ?6, zip = ?7, full_address = ?8, \
-         business_phone = ?9, email = ?10, directors = ?11, is_active = ?12 WHERE id = ?13",
+         business_phone = ?9, email = ?10, directors = ?11, is_active = ?12, match_status = ?13 \
+         WHERE id = ?14",
         params![
             existing.legal_name_register,
             existing.nzbn,
@@ -321,10 +323,114 @@ pub async fn apply_nzbn_match(
             existing.email,
             existing.directors,
             existing.is_active,
+            existing.match_status,
             company_id,
         ],
     )
     .map_err(map_err)?;
 
     Ok(existing)
+}
+
+fn normalize(s: &str) -> String {
+    s.trim().to_lowercase()
+}
+
+fn set_match_status(state: &State<'_, Db>, id: i64, status: &str) -> Result<(), String> {
+    let conn = state.0.lock().map_err(map_err)?;
+    conn.execute(
+        "UPDATE tp_companies SET match_status = ?1 WHERE id = ?2",
+        params![status, id],
+    )
+    .map_err(map_err)?;
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct BulkCheckResult {
+    pub id: i64,
+    pub company: String,
+    /// "matched" | "ambiguous" | "not_found" | "error"
+    pub outcome: String,
+    /// Populated only for "ambiguous" — lets the frontend reopen the picker
+    /// without a second round-trip search.
+    pub candidates: Vec<NzbnSearchResult>,
+    pub message: Option<String>,
+}
+
+/// Walks every TP Companies row with a non-blank name and checks it against
+/// the register: a single exact name match is applied automatically (same
+/// as `apply_nzbn_match`); anything else is left untouched in the data but
+/// flagged via `match_status` so it's visible in the grid, and returned here
+/// so the frontend can offer to resolve it (picker for "ambiguous", a plain
+/// warning for "not_found"/"error").
+#[tauri::command]
+pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkCheckResult>, String> {
+    let companies = crate::tp_companies::list_tp_companies(state.clone())?;
+    let mut out = Vec::new();
+
+    for company in companies {
+        let name = company.company.trim().to_string();
+        if name.is_empty() {
+            continue;
+        }
+        match search_nzbn_companies(state.clone(), name.clone()).await {
+            Ok(results) => {
+                let exact: Vec<&NzbnSearchResult> =
+                    results.iter().filter(|r| normalize(&r.name) == normalize(&name)).collect();
+                if results.is_empty() {
+                    let _ = set_match_status(&state, company.id, "not_found");
+                    out.push(BulkCheckResult {
+                        id: company.id,
+                        company: name,
+                        outcome: "not_found".to_string(),
+                        candidates: vec![],
+                        message: None,
+                    });
+                } else if exact.len() == 1 {
+                    let nzbn = exact[0].nzbn.clone();
+                    match apply_nzbn_match(state.clone(), company.id, nzbn).await {
+                        Ok(_) => out.push(BulkCheckResult {
+                            id: company.id,
+                            company: name,
+                            outcome: "matched".to_string(),
+                            candidates: vec![],
+                            message: None,
+                        }),
+                        Err(e) => {
+                            let _ = set_match_status(&state, company.id, "error");
+                            out.push(BulkCheckResult {
+                                id: company.id,
+                                company: name,
+                                outcome: "error".to_string(),
+                                candidates: vec![],
+                                message: Some(e),
+                            });
+                        }
+                    }
+                } else {
+                    let _ = set_match_status(&state, company.id, "ambiguous");
+                    out.push(BulkCheckResult {
+                        id: company.id,
+                        company: name,
+                        outcome: "ambiguous".to_string(),
+                        candidates: results,
+                        message: None,
+                    });
+                }
+            }
+            Err(e) => {
+                let _ = set_match_status(&state, company.id, "error");
+                out.push(BulkCheckResult {
+                    id: company.id,
+                    company: name,
+                    outcome: "error".to_string(),
+                    candidates: vec![],
+                    message: Some(e),
+                });
+            }
+        }
+    }
+
+    Ok(out)
 }

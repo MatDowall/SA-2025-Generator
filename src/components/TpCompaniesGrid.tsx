@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { HotTable, type HotTableRef } from "@handsontable/react-wrapper";
 import { registerAllModules } from "handsontable/registry";
 import type { CellChange, ChangeSource } from "handsontable/common";
-import { api, type NzbnSearchResult, type TpCompany } from "../api";
+import { api, type BulkCheckResult, type NzbnSearchResult, type TpCompany } from "../api";
 import { CompanyMatchModal } from "./CompanyMatchModal";
+import { BulkCheckResultsModal } from "./BulkCheckResultsModal";
 import "handsontable/styles/handsontable.css";
 import "handsontable/styles/ht-theme-main.css";
 import "./TpCompaniesGrid.css";
@@ -33,6 +34,40 @@ function activeRenderer(
   return td;
 }
 
+const MATCH_STATUS_LABEL: Record<string, string> = {
+  matched: "Matched",
+  ambiguous: "Needs Review",
+  not_found: "Not Found",
+  error: "Error",
+};
+
+function matchStatusRenderer(
+  _instance: unknown,
+  td: HTMLTableCellElement,
+  _row: number,
+  _col: number,
+  _prop: string | number,
+  value: unknown,
+): HTMLTableCellElement {
+  td.innerHTML = "";
+  td.classList.remove(
+    "tpgrid__status--matched",
+    "tpgrid__status--ambiguous",
+    "tpgrid__status--not_found",
+    "tpgrid__status--error",
+    "tpgrid__status--unknown",
+  );
+  const key = typeof value === "string" ? value : "";
+  if (key && MATCH_STATUS_LABEL[key]) {
+    td.textContent = MATCH_STATUS_LABEL[key];
+    td.classList.add(`tpgrid__status--${key}`);
+  } else {
+    td.textContent = "—";
+    td.classList.add("tpgrid__status--unknown");
+  }
+  return td;
+}
+
 const COLUMNS: {
   data: keyof TpCompany;
   title: string;
@@ -42,6 +77,13 @@ const COLUMNS: {
 }[] = [
   { data: "company", title: "Company", width: 180 },
   { data: "is_active", title: "Active", width: 90, readOnly: true, renderer: activeRenderer },
+  {
+    data: "match_status",
+    title: "Register Check",
+    width: 120,
+    readOnly: true,
+    renderer: matchStatusRenderer,
+  },
   { data: "legal_name_register", title: "Legal Name From Companies Register", width: 220 },
   { data: "nzbn", title: "NZBN", width: 120 },
   { data: "legal_name_nzbn", title: "Legal Name With NZBN", width: 220 },
@@ -86,12 +128,24 @@ const NZBN_MATCH_FIELDS: (keyof TpCompany)[] = [
   "email",
   "directors",
   "is_active",
+  "match_status",
 ];
+
+interface BulkResultsState {
+  results: BulkCheckResult[];
+  matchedCount: number;
+}
 
 export function TpCompaniesGrid() {
   const [rows, setRows] = useState<TpCompany[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [matchModal, setMatchModal] = useState<MatchModalState | null>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  // Kept separate from `bulkResultsOpen` so dismissing the modal doesn't throw
+  // away the candidates it fetched — the user can reopen the same results via
+  // the toolbar without re-running the (slow, rate-limited) bulk API check.
+  const [bulkResults, setBulkResults] = useState<BulkResultsState | null>(null);
+  const [bulkResultsOpen, setBulkResultsOpen] = useState(false);
   const hotRef = useRef<HotTableRef>(null);
   // Ids captured by beforeRemoveRow, consumed by afterRemoveRow — by the time
   // "after" fires, Handsontable has already spliced the row out, so its data
@@ -215,6 +269,46 @@ export function TpCompaniesGrid() {
     }
   };
 
+  // Checks every named row against the register in one pass. Exact matches
+  // are applied silently (the grid is fully reloaded afterwards to pick them
+  // up); anything else is surfaced in the results modal for the user to act on.
+  const runBulkCheck = useCallback(async () => {
+    setBulkRunning(true);
+    try {
+      const results = await api.bulkCheckTpCompanies();
+      const refreshed = await api.listTpCompanies();
+      setRows(refreshed);
+      const matchedCount = results.filter((r) => r.outcome === "matched").length;
+      const flagged = results.filter((r) => r.outcome !== "matched");
+      setBulkResults({ results: flagged, matchedCount });
+      setBulkResultsOpen(true);
+    } catch (e) {
+      console.error("bulk register check failed", e);
+      window.alert(`Bulk Companies Register check failed: ${String(e)}`);
+    } finally {
+      setBulkRunning(false);
+    }
+  }, []);
+
+  // Opens the picker for one flagged row from the bulk results, reusing the
+  // candidates the bulk check already fetched instead of searching again.
+  const onResolveBulkResult = useCallback((result: BulkCheckResult) => {
+    const hot = hotRef.current?.hotInstance;
+    if (!hot) return;
+    const data = hot.getSourceData() as TpCompany[];
+    const rowIndex = data.findIndex((r) => r.id === result.id);
+    if (rowIndex === -1) return;
+    setMatchModal({
+      rowIndex,
+      companyId: result.id,
+      searchTerm: result.company,
+      loading: false,
+      error: null,
+      results: result.candidates,
+    });
+    setBulkResults((prev) => (prev ? { ...prev, results: prev.results.filter((r) => r.id !== result.id) } : prev));
+  }, []);
+
   const onContextMenuCheckRegister = useCallback(
     (_key: string, selection: { start: { row: number } }[]) => {
       const hot = hotRef.current?.hotInstance;
@@ -237,6 +331,17 @@ export function TpCompaniesGrid() {
 
   return (
     <div className="tpgrid">
+      <div className="tpgrid__toolbar">
+        {bulkResults && (
+          <button className="btn btn--secondary" onClick={() => setBulkResultsOpen(true)}>
+            Register Check Results
+            {bulkResults.results.length > 0 ? ` (${bulkResults.results.length})` : ""}
+          </button>
+        )}
+        <button className="btn btn--secondary" onClick={() => void runBulkCheck()} disabled={bulkRunning}>
+          {bulkRunning ? "Checking Companies Register…" : "Check All Against Companies Register"}
+        </button>
+      </div>
       <HotTable
         ref={hotRef}
         data={rows}
@@ -280,6 +385,14 @@ export function TpCompaniesGrid() {
               (e) => setMatchModal((prev) => (prev ? { ...prev, error: String(e) } : prev)),
             );
           }}
+        />
+      )}
+      {bulkResults && bulkResultsOpen && (
+        <BulkCheckResultsModal
+          results={bulkResults.results}
+          matchedCount={bulkResults.matchedCount}
+          onResolve={onResolveBulkResult}
+          onClose={() => setBulkResultsOpen(false)}
         />
       )}
     </div>

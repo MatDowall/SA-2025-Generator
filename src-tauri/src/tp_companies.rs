@@ -35,6 +35,11 @@ pub struct TpCompany {
     // NULL = not checked against the Companies Register yet, Some(1) = active, Some(0) = inactive.
     #[serde(default)]
     pub is_active: Option<i64>,
+    // NULL = not checked yet, 'matched' = exact match applied, 'ambiguous' =
+    // multiple/fuzzy candidates need the user to pick, 'not_found' = no
+    // candidates at all, 'error' = the API call itself failed.
+    #[serde(default)]
+    pub match_status: Option<String>,
 }
 
 pub(crate) fn row_to_company(r: &rusqlite::Row) -> rusqlite::Result<TpCompany> {
@@ -57,12 +62,13 @@ pub(crate) fn row_to_company(r: &rusqlite::Row) -> rusqlite::Result<TpCompany> {
         standard_cost_code: r.get(15)?,
         ordering: r.get(16)?,
         is_active: r.get(17)?,
+        match_status: r.get(18)?,
     })
 }
 
 pub(crate) const SELECT_COLUMNS: &str = "id, company, legal_name_register, nzbn, legal_name_nzbn, \
      address_1, address_2, address_3, city, zip, full_address, business_phone, \
-     email, directors, trades, standard_cost_code, ordering, is_active";
+     email, directors, trades, standard_cost_code, ordering, is_active, match_status";
 
 /// Loads a single row by id — used by the NZBN-match flow to merge API
 /// results into the existing record without clobbering fields the API
@@ -99,8 +105,8 @@ pub fn upsert_tp_company(state: State<'_, Db>, company: TpCompany) -> Result<TpC
         conn.execute(
             "INSERT INTO tp_companies (company, legal_name_register, nzbn, legal_name_nzbn, \
              address_1, address_2, address_3, city, zip, full_address, business_phone, \
-             email, directors, trades, standard_cost_code, ordering, is_active) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+             email, directors, trades, standard_cost_code, ordering, is_active, match_status) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
             params![
                 name,
                 company.legal_name_register,
@@ -119,6 +125,7 @@ pub fn upsert_tp_company(state: State<'_, Db>, company: TpCompany) -> Result<TpC
                 company.standard_cost_code,
                 ordering,
                 company.is_active,
+                company.match_status,
             ],
         )
         .map_err(map_err)?;
@@ -133,7 +140,7 @@ pub fn upsert_tp_company(state: State<'_, Db>, company: TpCompany) -> Result<TpC
             "UPDATE tp_companies SET company = ?1, legal_name_register = ?2, nzbn = ?3, \
              legal_name_nzbn = ?4, address_1 = ?5, address_2 = ?6, address_3 = ?7, city = ?8, \
              zip = ?9, full_address = ?10, business_phone = ?11, email = ?12, directors = ?13, \
-             trades = ?14, standard_cost_code = ?15, is_active = ?16 WHERE id = ?17",
+             trades = ?14, standard_cost_code = ?15, is_active = ?16, match_status = ?17 WHERE id = ?18",
             params![
                 name,
                 company.legal_name_register,
@@ -151,6 +158,7 @@ pub fn upsert_tp_company(state: State<'_, Db>, company: TpCompany) -> Result<TpC
                 company.trades,
                 company.standard_cost_code,
                 company.is_active,
+                company.match_status,
                 company.id,
             ],
         )
@@ -199,8 +207,8 @@ fn insert_seed(conn: &rusqlite::Connection, companies: &[TpCompany]) -> rusqlite
         conn.execute(
             "INSERT INTO tp_companies (company, legal_name_register, nzbn, legal_name_nzbn, \
              address_1, address_2, address_3, city, zip, full_address, business_phone, \
-             email, directors, trades, standard_cost_code, ordering, is_active) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+             email, directors, trades, standard_cost_code, ordering, is_active, match_status) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
             params![
                 c.company,
                 c.legal_name_register,
@@ -219,6 +227,7 @@ fn insert_seed(conn: &rusqlite::Connection, companies: &[TpCompany]) -> rusqlite
                 c.standard_cost_code,
                 i as i64,
                 c.is_active,
+                c.match_status,
             ],
         )?;
     }

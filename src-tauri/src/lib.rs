@@ -173,6 +173,7 @@ pub fn run() {
             tp_companies::reorder_tp_companies,
             nzbn_api::search_nzbn_companies,
             nzbn_api::apply_nzbn_match,
+            nzbn_api::bulk_check_tp_companies,
             grid_values::get_grid_values,
             grid_values::set_grid_value,
             grid_values::get_grid_values_for_project,
