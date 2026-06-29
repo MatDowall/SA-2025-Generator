@@ -370,19 +370,30 @@ pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkChe
     let mut out = Vec::new();
 
     for company in companies {
-        let name = company.company.trim().to_string();
-        if name.is_empty() {
+        // Search by the Companies Register legal name (column D), not the
+        // trading name in `company` (column A) — the legal name is what
+        // actually matches NZBN register records.
+        let search_name = company
+            .legal_name_register
+            .as_deref()
+            .unwrap_or("")
+            .trim()
+            .to_string();
+        if search_name.is_empty() {
             continue;
         }
-        match search_nzbn_companies(state.clone(), name.clone()).await {
+        let display_name = company.company.trim().to_string();
+        match search_nzbn_companies(state.clone(), search_name.clone()).await {
             Ok(results) => {
-                let exact: Vec<&NzbnSearchResult> =
-                    results.iter().filter(|r| normalize(&r.name) == normalize(&name)).collect();
+                let exact: Vec<&NzbnSearchResult> = results
+                    .iter()
+                    .filter(|r| normalize(&r.name) == normalize(&search_name))
+                    .collect();
                 if results.is_empty() {
                     let _ = set_match_status(&state, company.id, "not_found");
                     out.push(BulkCheckResult {
                         id: company.id,
-                        company: name,
+                        company: display_name,
                         outcome: "not_found".to_string(),
                         candidates: vec![],
                         message: None,
@@ -392,7 +403,7 @@ pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkChe
                     match apply_nzbn_match(state.clone(), company.id, nzbn).await {
                         Ok(_) => out.push(BulkCheckResult {
                             id: company.id,
-                            company: name,
+                            company: display_name,
                             outcome: "matched".to_string(),
                             candidates: vec![],
                             message: None,
@@ -401,7 +412,7 @@ pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkChe
                             let _ = set_match_status(&state, company.id, "error");
                             out.push(BulkCheckResult {
                                 id: company.id,
-                                company: name,
+                                company: display_name,
                                 outcome: "error".to_string(),
                                 candidates: vec![],
                                 message: Some(e),
@@ -412,7 +423,7 @@ pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkChe
                     let _ = set_match_status(&state, company.id, "ambiguous");
                     out.push(BulkCheckResult {
                         id: company.id,
-                        company: name,
+                        company: display_name,
                         outcome: "ambiguous".to_string(),
                         candidates: results,
                         message: None,
@@ -423,7 +434,7 @@ pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkChe
                 let _ = set_match_status(&state, company.id, "error");
                 out.push(BulkCheckResult {
                     id: company.id,
-                    company: name,
+                    company: display_name,
                     outcome: "error".to_string(),
                     candidates: vec![],
                     message: Some(e),

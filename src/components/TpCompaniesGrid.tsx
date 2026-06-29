@@ -227,13 +227,16 @@ export function TpCompaniesGrid() {
   const onAfterChange = (changes: CellChange[] | null, source: ChangeSource) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot || !changes || source === "loadData" || (source as string) === SYNC_SOURCE) return;
-    // A typed-in (not pasted-as-part-of-a-bulk-op) change to the Company name
-    // itself re-triggers the same register check a right-click "Check
-    // Companies Register" would — covers both renaming an existing row and
-    // typing a brand-new name into the trailing spare row.
-    const companyChangedRows = new Set(
+    // A typed-in change to the Legal Name From Companies Register column
+    // re-triggers the same register check a right-click "Check Companies
+    // Register" would — that column best matches the NZBN register, unlike
+    // the (often informal) Company trading name in column A.
+    const legalNameChangedRows = new Set(
       changes
-        .filter(([, prop, oldVal, newVal]) => prop === "company" && newVal !== oldVal && String(newVal ?? "").trim() !== "")
+        .filter(
+          ([, prop, oldVal, newVal]) =>
+            prop === "legal_name_register" && newVal !== oldVal && String(newVal ?? "").trim() !== "",
+        )
         .map(([row]) => row),
     );
     const affectedRows = new Set(changes.map(([row]) => row));
@@ -261,8 +264,9 @@ export function TpCompaniesGrid() {
             .map((r) => r.id)
             .filter((id): id is number => Boolean(id));
           api.reorderTpCompanies(orderedIds).catch((e) => console.error("reorder failed", e));
-          if (companyChangedRows.has(rowIndex)) {
-            void runRegisterCheck(rowIndex, saved.id, saved.company);
+          const legalName = saved.legal_name_register?.trim();
+          if (legalNameChangedRows.has(rowIndex) && legalName) {
+            void runRegisterCheck(rowIndex, saved.id, legalName);
           }
         })
         .catch((e) => console.error("save failed", e));
@@ -315,8 +319,9 @@ export function TpCompaniesGrid() {
       if (!hot || selection.length === 0) return;
       const rowIndex = selection[0].start.row;
       const row = hot.getSourceDataAtRow(rowIndex) as TpCompany | undefined;
-      if (!row || !row.company || !row.company.trim() || !row.id) return;
-      void runRegisterCheck(rowIndex, row.id, row.company);
+      const legalName = row?.legal_name_register?.trim();
+      if (!row || !legalName || !row.id) return;
+      void runRegisterCheck(rowIndex, row.id, legalName);
     },
     [runRegisterCheck],
   );
