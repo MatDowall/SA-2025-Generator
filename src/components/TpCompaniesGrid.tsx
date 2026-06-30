@@ -5,6 +5,7 @@ import type { CellChange, ChangeSource } from "handsontable/common";
 import { api, type BulkCheckResult, type NzbnSearchResult, type TpCompany } from "../api";
 import { CompanyMatchModal } from "./CompanyMatchModal";
 import { BulkCheckResultsModal } from "./BulkCheckResultsModal";
+import { applySearchFilter } from "../lib/gridSearch";
 import "handsontable/styles/handsontable.css";
 import "handsontable/styles/ht-theme-main.css";
 import "./TpCompaniesGrid.css";
@@ -146,6 +147,7 @@ export function TpCompaniesGrid() {
   // the toolbar without re-running the (slow, rate-limited) bulk API check.
   const [bulkResults, setBulkResults] = useState<BulkResultsState | null>(null);
   const [bulkResultsOpen, setBulkResultsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const hotRef = useRef<HotTableRef>(null);
   // Ids captured by beforeRemoveRow, consumed by afterRemoveRow — by the time
   // "after" fires, Handsontable has already spliced the row out, so its data
@@ -158,6 +160,14 @@ export function TpCompaniesGrid() {
       .then(setRows)
       .catch((e) => setLoadError(String(e)));
   }, []);
+
+  // Re-apply whenever the query changes *or* the grid gets fresh data (e.g.
+  // after a bulk register check reload) — a previous trim's physical row
+  // indices don't track a wholesale data swap.
+  useEffect(() => {
+    const hot = hotRef.current?.hotInstance;
+    if (hot) applySearchFilter(hot, searchQuery);
+  }, [rows, searchQuery]);
 
   // These are passed as ordinary HotTable props (not registered manually via
   // addHook) so the wrapper's own lifecycle management keeps them attached
@@ -239,7 +249,12 @@ export function TpCompaniesGrid() {
         )
         .map(([row]) => row),
     );
-    const affectedRows = new Set(changes.map(([row]) => row));
+    // `changes` reports visual row indices, but the rest of this handler
+    // reads/writes via the *source* data APIs, which take physical row
+    // indices — the two diverge once the search filter trims rows.
+    const affectedRows = new Set(
+      changes.map(([row]) => hot.toPhysicalRow(row)).filter((r): r is number => r !== null),
+    );
     for (const rowIndex of affectedRows) {
       const row = hot.getSourceDataAtRow(rowIndex) as TpCompany | undefined;
       if (!row || !row.company || row.company.trim() === "") continue;
@@ -317,7 +332,8 @@ export function TpCompaniesGrid() {
     (_key: string, selection: { start: { row: number } }[]) => {
       const hot = hotRef.current?.hotInstance;
       if (!hot || selection.length === 0) return;
-      const rowIndex = selection[0].start.row;
+      const rowIndex = hot.toPhysicalRow(selection[0].start.row);
+      if (rowIndex === null) return;
       const row = hot.getSourceDataAtRow(rowIndex) as TpCompany | undefined;
       const legalName = row?.legal_name_register?.trim();
       if (!row || !legalName || !row.id) return;
@@ -337,6 +353,13 @@ export function TpCompaniesGrid() {
   return (
     <div className="tpgrid">
       <div className="tpgrid__toolbar">
+        <input
+          type="search"
+          className="tpgrid__search"
+          placeholder="Search…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
         {bulkResults && (
           <button className="btn btn--secondary" onClick={() => setBulkResultsOpen(true)}>
             Register Check Results
@@ -358,6 +381,7 @@ export function TpCompaniesGrid() {
         themeName="ht-theme-main"
         licenseKey="non-commercial-and-evaluation"
         minSpareRows={1}
+        trimRows={true}
         contextMenu={{
           items: {
             check_register: {

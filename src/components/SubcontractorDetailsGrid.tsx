@@ -4,6 +4,7 @@ import { registerAllModules } from "handsontable/registry";
 import type { CellChange, ChangeSource } from "handsontable/common";
 import { api, type Project, type Subcontractor, type TpCompany } from "../api";
 import { GRID_COLUMNS } from "../lib/gridColumns";
+import { applySearchFilter } from "../lib/gridSearch";
 import { buildCostCode, parseSubTrades } from "../lib/subTrades";
 import {
   createEngine,
@@ -60,6 +61,7 @@ export function SubcontractorDetailsGrid({
   const [jobNumber, setJobNumber] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const hotRef = useRef<HotTableRef>(null);
   const engineRef = useRef(createEngine());
   const tpRowCountRef = useRef(1);
@@ -165,6 +167,14 @@ export function SubcontractorDetailsGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, subs.length]);
 
+  // Re-apply whenever the query changes *or* the grid gets a fresh data set
+  // (e.g. switching projects) — a previous trim's physical row indices
+  // don't track a wholesale data swap.
+  useEffect(() => {
+    const hot = hotRef.current?.hotInstance;
+    if (hot) applySearchFilter(hot, searchQuery);
+  }, [rows, searchQuery]);
+
   const columns = useMemo(
     () =>
       GRID_COLUMNS.map((col) => {
@@ -213,11 +223,17 @@ export function SubcontractorDetailsGrid({
   const onAfterChange = (changes: CellChange[] | null, source: ChangeSource) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot || !changes || source === "loadData" || (source as string) === "sync") return;
-    for (const [rowIndex, prop, oldValue, newValue] of changes) {
+    for (const [visualRow, prop, oldValue, newValue] of changes) {
       const col = GRID_COLUMNS.find((c) => c.key === prop);
       if (!col || col.type === "computed" || col.type === "contract-info-mirror" || col.type === "cost-code")
         continue;
 
+      // `changes` reports a visual row index, but the source-data APIs
+      // below (and the HyperFormula engine, which mirrors physical row
+      // order) take physical row indices — the two diverge once the
+      // search filter trims rows.
+      const rowIndex = hot.toPhysicalRow(visualRow);
+      if (rowIndex === null) continue;
       const row = hot.getSourceDataAtRow(rowIndex) as GridRow | undefined;
       if (!row) continue;
       let value = newValue == null ? "" : String(newValue);
@@ -307,6 +323,15 @@ export function SubcontractorDetailsGrid({
 
   return (
     <div className="sdgrid">
+      <div className="sdgrid__toolbar">
+        <input
+          type="search"
+          className="sdgrid__search"
+          placeholder="Search…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
       <div className="sdgrid__formulabar">
         <span className="sdgrid__formulabar-label">{selectedLabel || "Select a cell"}</span>
         <input
@@ -329,6 +354,7 @@ export function SubcontractorDetailsGrid({
           manualColumnResize={true}
           autoColumnSize={true}
           minSpareRows={1}
+          trimRows={true}
           height="100%"
           width="100%"
           themeName="ht-theme-main"

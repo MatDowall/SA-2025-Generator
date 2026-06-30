@@ -5,6 +5,22 @@
   flex-direction: column;
 }
 
+.sdgrid__toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  padding: 6px 10px;
+}
+
+.sdgrid__search {
+  width: 220px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
 .sdgrid__formulabar {
   flex: 0 0 auto;
   display: flex;

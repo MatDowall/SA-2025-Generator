@@ -17,6 +17,17 @@
   padding: 6px 0 8px;
 }
 
+.tpgrid__search {
+  margin-right: auto;
+  width: 220px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
 /* Handsontable's wrapper renders one direct child div, which holds the
    actual table — flex-grow it so it isn't sized via an ambiguous
    percentage-height chain through non-flex ancestors. */
