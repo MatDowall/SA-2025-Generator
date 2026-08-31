@@ -1,0 +1,145 @@
+.loa {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.loa__sidebar {
+  flex: 0 0 260px;
+  height: 100%;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.loa__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.loa__title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.loa__hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.loa__sidebar .loa__hint {
+  padding: 16px;
+  margin: 0;
+}
+
+.loa__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.loa__toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+.loa__source {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.loa__toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.loa__exportmsg {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loa__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.loa__preview {
+  flex: 1 1 50%;
+  min-width: 0;
+  overflow: auto;
+  background: var(--bg);
+}
+
+.loa__editor {
+  flex: 1 1 50%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-left: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.loa__editorhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.loa__editortitle {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.loa__editor .loabody {
+  flex: 1 1 auto;
+}
+
+.loa__placeholder {
+  max-width: 480px;
+  margin: 64px auto;
+  padding: 32px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  color: var(--text);
+}
+
+.loa__placeholder p {
+  margin: 0 0 8px;
+}
+
+.loa__empty {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}

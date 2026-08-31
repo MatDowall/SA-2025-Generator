@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { api, type StaffMember, type StaffRole } from "../api";
+import { fileToScaledPngDataUrl } from "../lib/imageResize";
+import { LoaBodyEditor } from "./LoaBodyEditor";
+import { DEFAULT_LOA_BODY, LOA_GLOBAL_BODY_KEY } from "../lib/letterOfAward";
 import "./Forms.css";
 import "./SettingsModal.css";
 
@@ -31,6 +34,8 @@ function parseList(json: string | undefined): string[] {
 
 function StaffSection({ role, label }: { role: StaffRole; label: string }) {
   const [members, setMembers] = useState<StaffMember[]>([]);
+  const [sigError, setSigError] = useState<string>("");
+  const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
 
   useEffect(() => {
     api.listStaff(role).then(setMembers);
@@ -45,6 +50,25 @@ function StaffSection({ role, label }: { role: StaffRole; label: string }) {
     setMembers((prev) => prev.map((m) => (m.id === member.id ? saved : m)));
   };
 
+  // Save an explicit signature change directly (don't rely on the possibly
+  // stale `members` snapshot, the way the onBlur text saves do).
+  const saveSignature = async (member: StaffMember, signature_png: string | null) => {
+    const next = { ...member, signature_png };
+    update(member.id, { signature_png });
+    await api.upsertStaff(next);
+  };
+
+  const onPickSignature = async (member: StaffMember, file: File | undefined) => {
+    if (!file) return;
+    setSigError("");
+    try {
+      const dataUrl = await fileToScaledPngDataUrl(file);
+      await saveSignature(member, dataUrl);
+    } catch (e) {
+      setSigError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const addRow = async () => {
     const saved = await api.upsertStaff({
       id: 0,
@@ -53,6 +77,7 @@ function StaffSection({ role, label }: { role: StaffRole; label: string }) {
       mobile: null,
       email: null,
       ordering: members.length,
+      signature_png: null,
     });
     setMembers((prev) => [...prev, saved]);
   };
@@ -72,39 +97,92 @@ function StaffSection({ role, label }: { role: StaffRole; label: string }) {
       </div>
       <div className="settings__stafflist">
         {members.map((m) => (
-          <div className="settings__staffrow" key={m.id}>
-            <input
-              className="form__input"
-              value={m.name}
-              onChange={(e) => update(m.id, { name: e.target.value })}
-              onBlur={() => save(members.find((x) => x.id === m.id)!)}
-              placeholder="Name"
-            />
-            <input
-              className="form__input"
-              value={m.mobile ?? ""}
-              onChange={(e) => update(m.id, { mobile: e.target.value })}
-              onBlur={() => save(members.find((x) => x.id === m.id)!)}
-              placeholder="Mobile"
-            />
-            <input
-              className="form__input"
-              value={m.email ?? ""}
-              onChange={(e) => update(m.id, { email: e.target.value })}
-              onBlur={() => save(members.find((x) => x.id === m.id)!)}
-              placeholder="Email"
-            />
-            <button
-              className="settings__staffdel"
-              aria-label="Remove"
-              onClick={() => removeRow(m.id)}
-            >
-              ✕
-            </button>
+          <div className="settings__staffmember" key={m.id}>
+            <div className="settings__staffrow">
+              <input
+                className="form__input"
+                value={m.name}
+                onChange={(e) => update(m.id, { name: e.target.value })}
+                onBlur={() => save(members.find((x) => x.id === m.id)!)}
+                placeholder="Name"
+              />
+              <input
+                className="form__input"
+                value={m.mobile ?? ""}
+                onChange={(e) => update(m.id, { mobile: e.target.value })}
+                onBlur={() => save(members.find((x) => x.id === m.id)!)}
+                placeholder="Mobile"
+              />
+              <input
+                className="form__input"
+                value={m.email ?? ""}
+                onChange={(e) => update(m.id, { email: e.target.value })}
+                onBlur={() => save(members.find((x) => x.id === m.id)!)}
+                placeholder="Email"
+              />
+              <button
+                className="settings__staffdel"
+                aria-label="Remove"
+                onClick={() => removeRow(m.id)}
+              >
+                ✕
+              </button>
+            </div>
+            {role === "QS" && (
+              <div className="settings__sigrow">
+                <span className="settings__siglabel">Signature</span>
+                {m.signature_png ? (
+                  <img
+                    className="settings__sigpreview"
+                    src={m.signature_png}
+                    alt={`${m.name} signature`}
+                  />
+                ) : (
+                  <span className="settings__signone">None uploaded</span>
+                )}
+                <input
+                  ref={(el) => {
+                    fileInputs.current[m.id] = el;
+                  }}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    void onPickSignature(m, e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  className="btn btn--secondary"
+                  onClick={() => fileInputs.current[m.id]?.click()}
+                >
+                  {m.signature_png ? "Replace" : "Upload"}
+                </button>
+                {m.signature_png && (
+                  <button
+                    className="btn btn--secondary"
+                    onClick={() => void saveSignature(m, null)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ))}
         {members.length === 0 && (
           <p className="settings__empty">No one added yet.</p>
+        )}
+        {role === "QS" && sigError && (
+          <p className="settings__empty" style={{ color: "var(--danger)" }}>
+            {sigError}
+          </p>
+        )}
+        {role === "QS" && (
+          <p className="settings__note">
+            A transparent PNG works best. The assigned QS's signature is placed on
+            their Letters of Award automatically.
+          </p>
         )}
       </div>
     </div>
@@ -119,6 +197,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [nzbnApiKey, setNzbnApiKey] = useState("");
   const [nzbnApiEnv, setNzbnApiEnv] = useState("sandbox");
   const [lists, setLists] = useState<Record<string, string>>({});
+  const [loaBody, setLoaBody] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -133,6 +212,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         listText[key] = parseList(s[key]).join("\n");
       }
       setLists(listText);
+      setLoaBody((s[LOA_GLOBAL_BODY_KEY] ?? "").trim() || DEFAULT_LOA_BODY);
       setLoaded(true);
     })();
   }, []);
@@ -263,6 +343,31 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="settings__section">
+            <div className="settings__sectionhead">
+              <h4>Letter of Award — default body</h4>
+              <button
+                className="btn btn--secondary"
+                onClick={() => {
+                  setLoaBody(DEFAULT_LOA_BODY);
+                  saveScalar(LOA_GLOBAL_BODY_KEY, DEFAULT_LOA_BODY);
+                }}
+              >
+                Reset to default
+              </button>
+            </div>
+            <p className="settings__note">
+              The default letter body used for every project. Click a placeholder
+              to insert it; each project can override this under the Letter of
+              Award tab.
+            </p>
+            <LoaBodyEditor
+              value={loaBody}
+              onChange={setLoaBody}
+              onBlur={() => saveScalar(LOA_GLOBAL_BODY_KEY, loaBody)}
+            />
           </div>
         </div>
       )}

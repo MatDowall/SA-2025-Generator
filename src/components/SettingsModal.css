@@ -32,6 +32,43 @@
   align-items: center;
 }
 
+.settings__staffmember {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings__sigrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 2px;
+}
+
+.settings__siglabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 64px;
+}
+
+.settings__sigpreview {
+  height: 34px;
+  max-width: 180px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.settings__signone {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .settings__staffdel {
   border: none;
   background: transparent;

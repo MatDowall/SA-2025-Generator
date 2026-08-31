@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MenuBar, type MenuDef } from "./components/MenuBar";
 import { TabBar } from "./components/TabBar";
 import { SubcontractInfoView } from "./components/SubcontractInfoView";
+import { LetterOfAwardView } from "./components/LetterOfAwardView";
 import { Sidebar } from "./components/Sidebar";
 import { PdfViewer, type PdfViewerHandle } from "./components/PdfViewer";
 import { StatusBar } from "./components/StatusBar";
@@ -61,7 +62,7 @@ type Dialog =
 
 const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]/g, "_").trim();
 
-type AppTab = "pdf" | "subcontract-info";
+type AppTab = "pdf" | "subcontract-info" | "letter-of-award";
 
 function App() {
   // Top-level tabs
@@ -528,8 +529,9 @@ function App() {
       <MenuBar menus={menus} />
       <TabBar
         tabs={[
-          { key: "pdf", label: "PDF" },
+          { key: "pdf", label: "Subcontract Agreement" },
           { key: "subcontract-info", label: "Subcontract Info" },
+          { key: "letter-of-award", label: "Letter of Award" },
         ]}
         active={activeTab}
         onSelect={setActiveTab}
@@ -584,6 +586,16 @@ function App() {
           onCreateSubcontractor={createSubcontractorByName}
           onRenameSubcontractor={renameSubcontractorByName}
           onChanged={recomputeFieldValues}
+        />
+      )}
+
+      {activeTab === "letter-of-award" && (
+        <LetterOfAwardView
+          project={project}
+          subs={subs}
+          activeSubId={activeSubId}
+          onSelect={setActiveSubId}
+          zoom={zoom}
         />
       )}
 

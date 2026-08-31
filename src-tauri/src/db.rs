@@ -127,5 +127,7 @@ pub fn init(path: &std::path::Path) -> rusqlite::Result<Connection> {
     conn.execute_batch(SCHEMA)?;
     ensure_column(&conn, "tp_companies", "is_active", "INTEGER")?;
     ensure_column(&conn, "tp_companies", "match_status", "TEXT")?;
+    // Per-QS signature image (base64 PNG data URL) used on Letters of Award.
+    ensure_column(&conn, "staff_directory", "signature_png", "TEXT")?;
     Ok(conn)
 }

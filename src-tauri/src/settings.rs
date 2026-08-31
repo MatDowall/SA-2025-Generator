@@ -20,6 +20,9 @@ pub struct StaffMember {
     pub mobile: Option<String>,
     pub email: Option<String>,
     pub ordering: i64,
+    /// Base64 PNG data URL of the member's signature, used on Letters of Award.
+    #[serde(default)]
+    pub signature_png: Option<String>,
 }
 
 #[tauri::command]
@@ -58,7 +61,7 @@ pub fn list_staff(state: State<'_, Db>, role: String) -> Result<Vec<StaffMember>
     let conn = state.0.lock().map_err(map_err)?;
     let mut stmt = conn
         .prepare(
-            "SELECT id, role, name, mobile, email, ordering FROM staff_directory \
+            "SELECT id, role, name, mobile, email, ordering, signature_png FROM staff_directory \
              WHERE role = ?1 ORDER BY ordering, id",
         )
         .map_err(map_err)?;
@@ -71,6 +74,7 @@ pub fn list_staff(state: State<'_, Db>, role: String) -> Result<Vec<StaffMember>
                 mobile: r.get(3)?,
                 email: r.get(4)?,
                 ordering: r.get(5)?,
+                signature_png: r.get(6)?,
             })
         })
         .map_err(map_err)?;
@@ -93,8 +97,8 @@ pub fn upsert_staff(state: State<'_, Db>, member: StaffMember) -> Result<StaffMe
             )
             .map_err(map_err)?;
         conn.execute(
-            "INSERT INTO staff_directory (role, name, mobile, email, ordering) VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![member.role, name, member.mobile, member.email, ordering],
+            "INSERT INTO staff_directory (role, name, mobile, email, ordering, signature_png) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![member.role, name, member.mobile, member.email, ordering, member.signature_png],
         )
         .map_err(map_err)?;
         Ok(StaffMember {
@@ -105,8 +109,8 @@ pub fn upsert_staff(state: State<'_, Db>, member: StaffMember) -> Result<StaffMe
         })
     } else {
         conn.execute(
-            "UPDATE staff_directory SET name = ?1, mobile = ?2, email = ?3 WHERE id = ?4",
-            params![name, member.mobile, member.email, member.id],
+            "UPDATE staff_directory SET name = ?1, mobile = ?2, email = ?3, signature_png = ?4 WHERE id = ?5",
+            params![name, member.mobile, member.email, member.signature_png, member.id],
         )
         .map_err(map_err)?;
         Ok(StaffMember { name, ..member })

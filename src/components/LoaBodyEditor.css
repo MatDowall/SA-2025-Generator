@@ -1,0 +1,38 @@
+.loabody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.loabody__palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.loabody__chip {
+  border: 1px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.loabody__chip:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.loabody__textarea {
+  flex: 1 1 auto;
+  resize: vertical;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

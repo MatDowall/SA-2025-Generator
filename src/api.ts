@@ -153,6 +153,8 @@ export interface StaffMember {
   mobile: string | null;
   email: string | null;
   ordering: number;
+  /** Base64 PNG data URL of the member's signature, used on Letters of Award. */
+  signature_png: string | null;
 }
 
 export interface ImportReport {
