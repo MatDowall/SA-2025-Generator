@@ -43,12 +43,17 @@ export function SubcontractorDetailsGrid({
   subs,
   onCreateSubcontractor,
   onRenameSubcontractor,
+  onDeleteSubcontractor,
   onChanged,
 }: {
   project: Project | null;
   subs: Subcontractor[];
-  onCreateSubcontractor: (name: string) => Promise<Subcontractor>;
+  onCreateSubcontractor: (
+    name: string,
+    initialGridValues?: Record<string, string>,
+  ) => Promise<Subcontractor>;
   onRenameSubcontractor: (id: number, name: string) => Promise<void>;
+  onDeleteSubcontractor: (sub: Subcontractor) => void;
   onChanged: () => void;
 }) {
   const [rows, setRows] = useState<GridRow[] | null>(null);
@@ -62,6 +67,7 @@ export function SubcontractorDetailsGrid({
   const [selectedValue, setSelectedValue] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const hotRef = useRef<HotTableRef>(null);
   const engineRef = useRef(createEngine());
   const tpRowCountRef = useRef(1);
@@ -186,6 +192,8 @@ export function SubcontractorDetailsGrid({
           base.type = "checkbox";
         } else if (col.type === "contract-info-mirror") {
           base.readOnly = true;
+          // Same non-entry tint as the computed columns.
+          base.className = "htComputedColumn";
           if (col.contractInfoKey === "required_until_other") {
             // text mirror, not boolean
           } else {
@@ -220,78 +228,192 @@ export function SubcontractorDetailsGrid({
     [dropdownOptionsByListKey, tpCompanyNames],
   );
 
-  const onAfterChange = (changes: CellChange[] | null, source: ChangeSource) => {
-    const hot = hotRef.current?.hotInstance;
-    if (!hot || !changes || source === "loadData" || (source as string) === "sync") return;
-    for (const [visualRow, prop, oldValue, newValue] of changes) {
-      const col = GRID_COLUMNS.find((c) => c.key === prop);
-      if (!col || col.type === "computed" || col.type === "contract-info-mirror" || col.type === "cost-code")
-        continue;
+  // A single gesture can touch a huge number of cells at once — e.g.
+  // selecting the top-left corner ("select all") and pressing Delete emits one
+  // change per editable cell across every row. The old code did a separate DB
+  // write, HyperFormula recompute, and DOM sync *per cell*, which froze the app
+  // for a full grid. `applyChanges` instead collects the edits keyed by
+  // physical row and flushes one bulk write + one recompute + one DOM sync per
+  // affected row, with all engine writes wrapped in a single evaluation
+  // suspension so HyperFormula recalculates once rather than per cell. Even so,
+  // this work is synchronous and blocks the UI thread; `onAfterChange` shows a
+  // "Processing…" overlay and yields a frame for it to paint before starting,
+  // for large batches, so the app doesn't look like it has frozen/crashed.
+  const applyChanges = (
+    hot: NonNullable<HotTableRef["hotInstance"]>,
+    changes: CellChange[],
+  ) => {
+    interface RowEdits {
+      subId: number;
+      values: Record<string, string>;
+      aTradeChanged: boolean;
+    }
+    const editsByRow = new Map<number, RowEdits>();
+    let anyEdit = false;
 
-      // `changes` reports a visual row index, but the source-data APIs
-      // below (and the HyperFormula engine, which mirrors physical row
-      // order) take physical row indices — the two diverge once the
-      // search filter trims rows.
-      const rowIndex = hot.toPhysicalRow(visualRow);
-      if (rowIndex === null) continue;
-      const row = hot.getSourceDataAtRow(rowIndex) as GridRow | undefined;
-      if (!row) continue;
-      let value = newValue == null ? "" : String(newValue);
-      if (col.type === "number" && value) {
-        // Defensive backstop: strip thousands-separator commas regardless of
-        // why they might be there (e.g. a numeric editor echoing its own
-        // display formatting back into source data) — a comma-containing
-        // string silently fails numeric parsing downstream (HyperFormula's
-        // SUBTOTAL would treat it as 0 rather than erroring).
-        const sanitized = value.replace(/,/g, "");
-        if (sanitized !== value) {
-          value = sanitized;
-          hot.setSourceDataAtCell(rowIndex, col.key, sanitized, "sync");
+    const engine = engineRef.current;
+    engine.suspendEvaluation();
+    try {
+      for (const [visualRow, prop, oldValue, newValue] of changes) {
+        const col = GRID_COLUMNS.find((c) => c.key === prop);
+        if (
+          !col ||
+          col.type === "computed" ||
+          col.type === "contract-info-mirror" ||
+          col.type === "cost-code"
+        )
+          continue;
+
+        // `changes` reports a visual row index, but the source-data APIs
+        // below (and the HyperFormula engine, which mirrors physical row
+        // order) take physical row indices — the two diverge once the
+        // search filter trims rows.
+        const rowIndex = hot.toPhysicalRow(visualRow);
+        if (rowIndex === null) continue;
+        const row = hot.getSourceDataAtRow(rowIndex) as GridRow | undefined;
+        if (!row) continue;
+        let value = newValue == null ? "" : String(newValue);
+        if (col.type === "number" && value) {
+          // Defensive backstop: strip thousands-separator commas regardless of
+          // why they might be there (e.g. a numeric editor echoing its own
+          // display formatting back into source data) — a comma-containing
+          // string silently fails numeric parsing downstream (HyperFormula's
+          // SUBTOTAL would treat it as 0 rather than erroring).
+          const sanitized = value.replace(/,/g, "");
+          if (sanitized !== value) {
+            value = sanitized;
+            hot.setSourceDataAtCell(rowIndex, col.key, sanitized, "sync");
+          }
         }
-      }
 
-      if (col.type === "name-mirror") {
-        const trimmed = value.trim();
-        if (!trimmed) continue; // ignore clearing the name — not a delete affordance
-        if (!row._subId) {
-          // A blank spare row just got a name typed into it — this *is* the
-          // "add a subcontractor" action now, not a prerequisite for one.
-          onCreateSubcontractor(trimmed)
-            .then(onChanged)
-            .catch((e) => console.error("create failed", e));
-        } else if (trimmed !== String(oldValue ?? "").trim()) {
-          onRenameSubcontractor(row._subId, trimmed)
-            .then(onChanged)
-            .catch((e) => console.error("rename failed", e));
-          // The name is the XLOOKUP key for D/E — recompute this row.
-          const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
-          setCell(engineRef.current, rowIndex, colIndex, trimmed);
-          const computed = recomputeRow(engineRef.current, rowIndex);
-          hot.setSourceDataAtCell(rowIndex, "D_tp_address", computed.D_tp_address, "sync");
-          hot.setSourceDataAtCell(rowIndex, "E_tp_email", computed.E_tp_email, "sync");
+        if (col.type === "name-mirror") {
+          const trimmed = value.trim();
+          if (!trimmed) {
+            // Clearing the Subcontractor cell isn't a valid edit: the name is
+            // the row's identity — it drives the sidebar label, the PDF
+            // filename, the PDF's Subcontractor_Name field, and D/E's address
+            // lookup, all of which stay populated. Leaving B blank would make
+            // the grid silently contradict every other surface (and strand
+            // D/E showing an address for a "nameless" row). So restore the
+            // real entity name rather than accept the blank. (To actually
+            // remove a subcontractor, use the sidebar's delete.) A blank spare
+            // row has no identity to restore, so just ignore it there.
+            if (row._subId) {
+              const existing =
+                subs.find((s) => s.id === row._subId)?.name ?? String(oldValue ?? "");
+              if (existing) hot.setSourceDataAtCell(rowIndex, col.key, existing, "sync");
+            }
+            continue;
+          }
+          if (!row._subId) {
+            // A blank spare row just got a name typed into it — this *is* the
+            // "add a subcontractor" action now, not a prerequisite for one.
+            //
+            // Anything already typed into *other* columns of this spare row
+            // (e.g. a Trade in column A) only lived in the grid's in-memory
+            // source data until now — there was no subcontractor id to persist
+            // it against. Creating the subcontractor triggers a reload from the
+            // database (subs.length changes), which would wipe those unsaved
+            // values, so capture and persist them against the new id first.
+            const pending: Record<string, string> = {};
+            for (const c of GRID_COLUMNS) {
+              if (
+                c.type === "computed" ||
+                c.type === "contract-info-mirror" ||
+                c.type === "cost-code" ||
+                c.type === "name-mirror"
+              )
+                continue;
+              const v = row[c.key];
+              if (v != null && String(v) !== "") pending[c.key] = String(v);
+            }
+            onCreateSubcontractor(trimmed, pending)
+              .then(onChanged)
+              .catch((e) => console.error("create failed", e));
+          } else if (trimmed !== String(oldValue ?? "").trim()) {
+            onRenameSubcontractor(row._subId, trimmed)
+              .then(onChanged)
+              .catch((e) => console.error("rename failed", e));
+            // The name is the XLOOKUP key for D/E — recompute this row.
+            const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
+            setCell(engine, rowIndex, colIndex, trimmed);
+            let entry = editsByRow.get(rowIndex);
+            if (!entry) {
+              entry = { subId: row._subId, values: {}, aTradeChanged: false };
+              editsByRow.set(rowIndex, entry);
+            }
+          }
+          continue;
         }
-        continue;
+
+        if (!row._subId) continue; // blank spare row with no name yet — nothing to persist to
+
+        const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
+        setCell(engine, rowIndex, colIndex, value);
+
+        let entry = editsByRow.get(rowIndex);
+        if (!entry) {
+          entry = { subId: row._subId, values: {}, aTradeChanged: false };
+          editsByRow.set(rowIndex, entry);
+        }
+        entry.values[col.key] = value;
+        if (col.key === "A_trade") {
+          entry.aTradeChanged = true;
+          const newCode = buildCostCode(value, jobNumber, subTradeCodeByTrade);
+          entry.values.C_cost_code = newCode;
+          hot.setSourceDataAtCell(rowIndex, "C_cost_code", newCode, "sync");
+        }
+        anyEdit = true;
       }
+    } finally {
+      // Resume once — HyperFormula recalculates all dependents in one pass.
+      engine.resumeEvaluation();
+    }
 
-      if (!row._subId) continue; // blank spare row with no name yet — nothing to persist to
-      api
-        .setGridValue(row._subId, col.key, value)
-        .then(onChanged)
-        .catch((e) => console.error("save failed", e));
-
-      const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
-      setCell(engineRef.current, rowIndex, colIndex, value);
-      const computed = recomputeRow(engineRef.current, rowIndex);
+    // One DB write + one recompute-read + one DOM sync per affected row.
+    for (const [rowIndex, entry] of editsByRow) {
+      if (Object.keys(entry.values).length > 0) {
+        void api
+          .bulkSetGridValues(entry.subId, entry.values)
+          .catch((e) => console.error("save failed", e));
+      }
+      const computed = recomputeRow(engine, rowIndex);
       hot.setSourceDataAtCell(rowIndex, "D_tp_address", computed.D_tp_address, "sync");
       hot.setSourceDataAtCell(rowIndex, "E_tp_email", computed.E_tp_email, "sync");
       hot.setSourceDataAtCell(rowIndex, "M_contract_value", computed.M_contract_value, "sync");
-
-      if (col.key === "A_trade") {
-        const newCode = buildCostCode(value, jobNumber, subTradeCodeByTrade);
-        hot.setSourceDataAtCell(rowIndex, "C_cost_code", newCode, "sync");
-        void api.setGridValue(row._subId, "C_cost_code", newCode).then(onChanged);
-      }
     }
+
+    if (anyEdit || editsByRow.size > 0) onChanged();
+  };
+
+  // Above this many cell changes in one gesture, the batched apply takes long
+  // enough to be perceptible, so route it through the paint-first overlay path.
+  const PROCESSING_THRESHOLD = 40;
+
+  const onAfterChange = (changes: CellChange[] | null, source: ChangeSource) => {
+    const hot = hotRef.current?.hotInstance;
+    if (!hot || !changes || source === "loadData" || (source as string) === "sync") return;
+
+    if (changes.length < PROCESSING_THRESHOLD) {
+      applyChanges(hot, changes);
+      return;
+    }
+
+    // Snapshot the changes (Handsontable may recycle the array) and defer the
+    // heavy work until after the browser has painted the overlay. A single rAF
+    // fires before paint; a second, nested rAF runs after it — guaranteeing the
+    // "Processing…" state is actually on screen before we block the thread.
+    const snapshot = changes.slice();
+    setIsProcessing(true);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        try {
+          applyChanges(hot, snapshot);
+        } finally {
+          setIsProcessing(false);
+        }
+      }),
+    );
   };
 
   const onAfterSelectionEnd = (row: number, col: number) => {
@@ -309,6 +431,37 @@ export function SubcontractorDetailsGrid({
     const sel = hot?.getSelectedLast();
     if (!hot || !sel) return;
     hot.setDataAtCell(sel[0], sel[1], selectedValue);
+  };
+
+  // Resolve the subcontractor for the currently selected (right-clicked) row,
+  // or undefined for the blank spare row / an unsaved row. Handsontable selects
+  // the cell under the cursor before opening the context menu, so the last
+  // selection is the right-clicked row.
+  const selectedSub = (): Subcontractor | undefined => {
+    const hot = hotRef.current?.hotInstance;
+    const sel = hot?.getSelectedLast();
+    if (!hot || !sel) return undefined;
+    const phys = hot.toPhysicalRow(sel[0]);
+    if (phys == null) return undefined;
+    const row = hot.getSourceDataAtRow(phys) as GridRow | undefined;
+    return row?._subId ? subs.find((s) => s.id === row._subId) : undefined;
+  };
+
+  // Right-click a row → "Delete subcontractor". Routes through the same
+  // confirm-and-delete path as the sidebar (onDeleteSubcontractor) so removal
+  // stays consistent across the grid, sidebar and PDF preview. Disabled on the
+  // blank spare row, which has no subcontractor to delete.
+  const contextMenu = {
+    items: {
+      delete_subcontractor: {
+        name: "Delete subcontractor",
+        disabled: () => !selectedSub(),
+        callback: () => {
+          const sub = selectedSub();
+          if (sub) onDeleteSubcontractor(sub);
+        },
+      },
+    },
   };
 
   if (!project) {
@@ -343,6 +496,14 @@ export function SubcontractorDetailsGrid({
         />
       </div>
       <div className="sdgrid__table">
+        {isProcessing && (
+          <div className="sdgrid__processing" role="status" aria-live="polite">
+            <div className="sdgrid__processing-box">
+              <span className="sdgrid__spinner" aria-hidden="true" />
+              <span>Processing…</span>
+            </div>
+          </div>
+        )}
         <HotTable
           ref={hotRef}
           data={rows}
@@ -359,6 +520,7 @@ export function SubcontractorDetailsGrid({
           width="100%"
           themeName="ht-theme-main"
           licenseKey="non-commercial-and-evaluation"
+          contextMenu={contextMenu}
           afterChange={onAfterChange}
           afterSelectionEnd={onAfterSelectionEnd}
         />

@@ -13,12 +13,17 @@ export function SubcontractInfoView({
   subs,
   onCreateSubcontractor,
   onRenameSubcontractor,
+  onDeleteSubcontractor,
   onChanged,
 }: {
   project: Project | null;
   subs: Subcontractor[];
-  onCreateSubcontractor: (name: string) => Promise<Subcontractor>;
+  onCreateSubcontractor: (
+    name: string,
+    initialGridValues?: Record<string, string>,
+  ) => Promise<Subcontractor>;
   onRenameSubcontractor: (id: number, name: string) => Promise<void>;
+  onDeleteSubcontractor: (sub: Subcontractor) => void;
   onChanged: () => void;
 }) {
   const [subTab, setSubTab] = useState<SubTab>("contract-info");
@@ -46,6 +51,7 @@ export function SubcontractInfoView({
             subs={subs}
             onCreateSubcontractor={onCreateSubcontractor}
             onRenameSubcontractor={onRenameSubcontractor}
+            onDeleteSubcontractor={onDeleteSubcontractor}
             onChanged={onChanged}
           />
         )}

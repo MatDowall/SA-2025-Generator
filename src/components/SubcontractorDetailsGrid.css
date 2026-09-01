@@ -52,11 +52,53 @@
 }
 
 .sdgrid__table {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Shown while a large batch edit (e.g. select-all + Delete) is being applied.
+   Covers the grid so the app clearly reads as "busy" rather than crashed. */
+.sdgrid__processing {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  cursor: progress;
+}
+
+.sdgrid__processing-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.sdgrid__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: sdgrid-spin 0.7s linear infinite;
+}
+
+@keyframes sdgrid-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Handsontable's wrapper renders one direct child div holding the actual
@@ -67,9 +109,22 @@
   min-height: 0;
 }
 
-.htComputedColumn {
-  background: var(--bg-hover) !important;
-  color: var(--text-muted);
+/* Darken the sheet's grid dividers. Derived from the theme's own foreground
+   colour via color-mix so it reads correctly whether the grid renders in light
+   or dark — rather than hard-coded values that assume a mode. */
+.ht-theme-main {
+  --ht-border-color: color-mix(in srgb, var(--ht-foreground-color) 28%, transparent) !important;
+  --ht-cell-horizontal-border-color: color-mix(in srgb, var(--ht-foreground-color) 28%, transparent) !important;
+  --ht-cell-vertical-border-color: color-mix(in srgb, var(--ht-foreground-color) 28%, transparent) !important;
+}
+
+/* Read-only / computed cells (TP Address, TP Email, Code, Contract Value, the
+   Contract-Info mirrors) get this class in the column config. `.handsontable td`
+   prefix beats Handsontable's own `.handsontable td` cell rules. The fill is a
+   translucent shade of the theme's foreground, so it tints the cell relative to
+   the actual grid background in either light or dark mode. */
+.handsontable td.htComputedColumn {
+  background-color: color-mix(in srgb, var(--ht-foreground-color) 12%, transparent) !important;
 }
 
 .sdgrid__loading {

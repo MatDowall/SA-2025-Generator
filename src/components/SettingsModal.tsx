@@ -4,6 +4,13 @@ import { api, type StaffMember, type StaffRole } from "../api";
 import { fileToScaledPngDataUrl } from "../lib/imageResize";
 import { LoaBodyEditor } from "./LoaBodyEditor";
 import { DEFAULT_LOA_BODY, LOA_GLOBAL_BODY_KEY } from "../lib/letterOfAward";
+import {
+  DEFAULT_EMAIL_BODY,
+  DEFAULT_EMAIL_SUBJECT,
+  EMAIL_BODY_KEY,
+  EMAIL_PLACEHOLDERS,
+  EMAIL_SUBJECT_KEY,
+} from "../lib/emailTemplate";
 import "./Forms.css";
 import "./SettingsModal.css";
 
@@ -198,6 +205,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [nzbnApiEnv, setNzbnApiEnv] = useState("sandbox");
   const [lists, setLists] = useState<Record<string, string>>({});
   const [loaBody, setLoaBody] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -213,6 +222,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       }
       setLists(listText);
       setLoaBody((s[LOA_GLOBAL_BODY_KEY] ?? "").trim() || DEFAULT_LOA_BODY);
+      setEmailSubject((s[EMAIL_SUBJECT_KEY] ?? "").trim() || DEFAULT_EMAIL_SUBJECT);
+      setEmailBody((s[EMAIL_BODY_KEY] ?? "").trim() || DEFAULT_EMAIL_BODY);
       setLoaded(true);
     })();
   }, []);
@@ -368,6 +379,51 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               onChange={setLoaBody}
               onBlur={() => saveScalar(LOA_GLOBAL_BODY_KEY, loaBody)}
             />
+          </div>
+
+          <div className="settings__section">
+            <div className="settings__sectionhead">
+              <h4>Email — subject &amp; body</h4>
+              <button
+                className="btn btn--secondary"
+                onClick={() => {
+                  setEmailSubject(DEFAULT_EMAIL_SUBJECT);
+                  setEmailBody(DEFAULT_EMAIL_BODY);
+                  saveScalar(EMAIL_SUBJECT_KEY, DEFAULT_EMAIL_SUBJECT);
+                  saveScalar(EMAIL_BODY_KEY, DEFAULT_EMAIL_BODY);
+                }}
+              >
+                Reset to default
+              </button>
+            </div>
+            <p className="settings__note">
+              Used for the draft opened by the Email buttons on the Subcontract
+              Agreement and Letter of Award tabs. Placeholders{" "}
+              <code>{"{{Document}}"}</code>, <code>{"{{Subcontractor}}"}</code>,{" "}
+              <code>{"{{Project_Name}}"}</code> and <code>{"{{Project_Number}}"}</code>{" "}
+              are filled in automatically — <code>{"{{Document}}"}</code> becomes
+              “Subcontract Agreement” or “Letter of Award”. You can type placeholders
+              into the subject too.
+            </p>
+            <div className="form__row">
+              <label className="form__label">Subject</label>
+              <input
+                className="form__input"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                onBlur={(e) => saveScalar(EMAIL_SUBJECT_KEY, e.target.value)}
+              />
+            </div>
+            <div className="form__row">
+              <label className="form__label">Body</label>
+              <LoaBodyEditor
+                value={emailBody}
+                onChange={setEmailBody}
+                onBlur={() => saveScalar(EMAIL_BODY_KEY, emailBody)}
+                placeholders={EMAIL_PLACEHOLDERS}
+                minHeight={160}
+              />
+            </div>
           </div>
         </div>
       )}

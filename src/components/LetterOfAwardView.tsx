@@ -9,6 +9,8 @@ import {
   resolveLetterValues,
 } from "../lib/letterOfAward";
 import { renderLetterOfAward } from "../lib/loaPdf";
+import { openEmailDraftWithPdf, recipientEmailForSub } from "../lib/emailDraft";
+import { loadEmailTemplates, renderEmailTemplate } from "../lib/emailTemplate";
 import { PdfBytesPreview } from "./PdfBytesPreview";
 import { LoaBodyEditor } from "./LoaBodyEditor";
 import "./LetterOfAwardView.css";
@@ -186,6 +188,38 @@ export function LetterOfAwardView({
     }
   };
 
+  // Open a mail-client draft with the currently-previewed letter attached and
+  // the trade partner's email pre-filled as recipient (reuses the rendered
+  // bytes). The user reviews and sends it themselves.
+  const emailCurrent = async () => {
+    if (!project || !activeSub || !bytes || !data || busy) return;
+    setBusy(true);
+    setExportMsg("");
+    try {
+      const name = letterFileName(activeSub.name);
+      const to = recipientEmailForSub(activeSub.name, data.tpCompanies);
+      const tpl = await loadEmailTemplates();
+      const tokens = {
+        Document: "Letter of Award",
+        Subcontractor: activeSub.name,
+        Project_Name: project.name,
+        Project_Number: project.project_number,
+      };
+      await openEmailDraftWithPdf({
+        to,
+        subject: renderEmailTemplate(tpl.subject, tokens),
+        body: renderEmailTemplate(tpl.body, tokens),
+        attachmentName: name,
+        pdfBytes: bytes,
+      });
+      setExportMsg(to ? `Draft opened for ${to}` : "Draft opened (no email on file)");
+    } catch (e) {
+      setExportMsg(`Email failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // Render every subcontractor's letter and export them as a single zip.
   const exportAll = async () => {
     if (!project || !data || busy) return;
@@ -274,6 +308,14 @@ export function LetterOfAwardView({
           </span>
           <div className="loa__toolbar-spacer" />
           {exportMsg && <span className="loa__exportmsg">{exportMsg}</span>}
+          <button
+            className="btn btn--secondary"
+            onClick={emailCurrent}
+            disabled={busy || !activeSub || !bytes}
+            title="Open an email draft with this letter attached"
+          >
+            Email letter
+          </button>
           <button
             className="btn btn--secondary"
             onClick={exportCurrent}

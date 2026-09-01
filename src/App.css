@@ -41,6 +41,34 @@
 .app__canvas {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header bar above the Subcontract Agreement preview (Email / Export). */
+.pdfbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+.pdfbar__title {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.pdfbar__spacer {
+  flex: 1 1 auto;
+}
+
+.app__viewerwrap {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
 }
 

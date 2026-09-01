@@ -26,6 +26,8 @@ import { useMappingRecompute } from "./hooks/useMappingRecompute";
 import { importCsvIntoProject } from "./lib/csvImport";
 import { applyFieldEdit } from "./lib/csvReverseMap";
 import { fillTemplate } from "./pdfFill";
+import { openEmailDraftWithPdf, recipientEmailForSub } from "./lib/emailDraft";
+import { loadEmailTemplates, renderEmailTemplate } from "./lib/emailTemplate";
 import { zipSync } from "fflate";
 import {
   api,
@@ -253,9 +255,15 @@ function App() {
   // point for creating/renaming subcontractors (typing a name into a blank
   // row), not just the Sidebar's "Add Subcontractor" dialog.
   const createSubcontractorByName = useCallback(
-    async (name: string) => {
+    async (name: string, initialGridValues?: Record<string, string>) => {
       if (!project) throw new Error("No project open");
       const s = await api.addSubcontractor(project.id, name);
+      // Persist any values already typed into the same (previously blank) grid
+      // row *before* setSubs, since that triggers the grid's reload-from-DB —
+      // if the write hasn't committed by then, the reload wipes the values.
+      if (initialGridValues && Object.keys(initialGridValues).length > 0) {
+        await api.bulkSetGridValues(s.id, initialGridValues);
+      }
       setSubs((prev) => [...prev, s]);
       return s;
     },
@@ -476,6 +484,42 @@ function App() {
     },
   );
 
+  // Subcontract Agreement tab header actions (Email / Export). Email opens a
+  // mail-client draft with the active subcontractor's flattened agreement
+  // attached and the trade partner's email pre-filled; the user reviews/sends.
+  const [agreementBusy, setAgreementBusy] = useState(false);
+  const emailAgreement = guard("Email failed", async () => {
+    if (!project) return;
+    const sub = subs.find((s) => s.id === activeSubId);
+    if (!sub) return;
+    setAgreementBusy(true);
+    try {
+      await flushPending(activeIdRef.current); // include latest edits
+      const template = await api.getTemplatePdf();
+      const v = await api.getFieldValues(sub.id);
+      const pdf = await fillTemplate(template, v, true); // flattened (read-only)
+      const tpCompanies = await api.listTpCompanies();
+      const to = recipientEmailForSub(sub.name, tpCompanies);
+      const tpl = await loadEmailTemplates();
+      const tokens = {
+        Document: "Subcontract Agreement",
+        Subcontractor: sub.name,
+        Project_Name: project.name,
+        Project_Number: project.project_number,
+      };
+      await openEmailDraftWithPdf({
+        to,
+        subject: renderEmailTemplate(tpl.subject, tokens),
+        body: renderEmailTemplate(tpl.body, tokens),
+        attachmentName: pdfName(sub.name),
+        pdfBytes: pdf,
+      });
+      setStatus(to ? `Email draft opened for ${to}` : "Email draft opened (no email on file)");
+    } finally {
+      setAgreementBusy(false);
+    }
+  });
+
   const needProject = (fn: () => void) => () =>
     project ? fn() : setDialog({ kind: "newProject" });
 
@@ -565,16 +609,38 @@ function App() {
             </>
           )}
           <div className="app__canvas">
-            <PdfViewer
-              ref={viewerRef}
-              zoom={zoom}
-              values={values}
-              editable={activeSubId != null}
-              onFieldChange={onPdfFieldChange}
-              onLoaded={onDocLoaded}
-              onPageChange={setPage}
-              onError={onViewerError}
-            />
+            <div className="pdfbar">
+              <span className="pdfbar__title">Subcontract Agreement</span>
+              <div className="pdfbar__spacer" />
+              <button
+                className="btn btn--secondary"
+                onClick={emailAgreement}
+                disabled={agreementBusy || activeSubId == null}
+                title="Open an email draft with the flattened agreement attached"
+              >
+                {agreementBusy ? "Preparing…" : "Email"}
+              </button>
+              <button
+                className="btn btn--secondary"
+                onClick={() => setDialog({ kind: "exportPdf" })}
+                disabled={!project}
+                title="Export the agreement as a PDF"
+              >
+                Export
+              </button>
+            </div>
+            <div className="app__viewerwrap">
+              <PdfViewer
+                ref={viewerRef}
+                zoom={zoom}
+                values={values}
+                editable={activeSubId != null}
+                onFieldChange={onPdfFieldChange}
+                onLoaded={onDocLoaded}
+                onPageChange={setPage}
+                onError={onViewerError}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -585,6 +651,7 @@ function App() {
           subs={subs}
           onCreateSubcontractor={createSubcontractorByName}
           onRenameSubcontractor={renameSubcontractorByName}
+          onDeleteSubcontractor={(s) => setDialog({ kind: "confirmDeleteSub", sub: s })}
           onChanged={recomputeFieldValues}
         />
       )}

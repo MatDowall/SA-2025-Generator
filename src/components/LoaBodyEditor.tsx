@@ -2,18 +2,22 @@ import { useRef } from "react";
 import { LOA_PLACEHOLDERS } from "../lib/letterOfAward";
 import "./LoaBodyEditor.css";
 
-// Editable letter-body textarea with a clickable placeholder palette. Inserts
-// tokens at the cursor. Persistence/reset are the parent's job.
+// Editable body textarea with a clickable placeholder palette. Inserts tokens
+// at the cursor. Persistence/reset are the parent's job. Defaults to the Letter
+// of Award placeholders, but any token list can be supplied (e.g. the email
+// template settings).
 export function LoaBodyEditor({
   value,
   onChange,
   onBlur,
   minHeight = 280,
+  placeholders = LOA_PLACEHOLDERS,
 }: {
   value: string;
   onChange: (next: string) => void;
   onBlur?: () => void;
   minHeight?: number;
+  placeholders?: readonly { token: string; label: string }[];
 }) {
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -38,7 +42,7 @@ export function LoaBodyEditor({
   return (
     <div className="loabody">
       <div className="loabody__palette">
-        {LOA_PLACEHOLDERS.map((p) => (
+        {placeholders.map((p) => (
           <button
             key={p.token}
             type="button"
