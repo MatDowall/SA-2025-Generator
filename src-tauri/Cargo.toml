@@ -1,7 +1,7 @@
 [package]
 name = "sa2025-generator"
-version = "0.4.0"
-description = "SA-2025 Generator — Master Builders Subcontract Agreement generator"
+version = "0.5.0"
+description = "SA-2025 Generator - Master Builders Subcontract Agreement generator"
 authors = ["you"]
 edition = "2021"
 

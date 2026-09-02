@@ -56,7 +56,7 @@ export function ImportCsvModal({
         {blocked ? (
           <p className="form__error">
             The first column must be <code>Subcontractor</code>. This file's
-            first column is <code>{report.columns[0] ?? "(empty)"}</code> — it
+            first column is <code>{report.columns[0] ?? "(empty)"}</code> - it
             doesn't look like a SA-2025 export.
           </p>
         ) : (

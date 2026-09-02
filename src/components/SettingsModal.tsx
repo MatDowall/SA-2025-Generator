@@ -3,6 +3,7 @@ import { Modal } from "./Modal";
 import { api, type StaffMember, type StaffRole } from "../api";
 import { fileToScaledPngDataUrl } from "../lib/imageResize";
 import { LoaBodyEditor } from "./LoaBodyEditor";
+import { FieldDefaultsSection } from "./FieldDefaultsSection";
 import { DEFAULT_LOA_BODY, LOA_GLOBAL_BODY_KEY } from "../lib/letterOfAward";
 import {
   DEFAULT_EMAIL_BODY,
@@ -27,6 +28,25 @@ const STAFF_ROLES: { role: StaffRole; label: string }[] = [
   { role: "PM", label: "Project Managers" },
   { role: "BTM", label: "Build Team Managers" },
   { role: "QS", label: "Quantity Surveyors" },
+];
+
+type SectionKey =
+  | "company"
+  | "staff"
+  | "lists"
+  | "defaults"
+  | "loa"
+  | "email"
+  | "api";
+
+const NAV_SECTIONS: { key: SectionKey; label: string }[] = [
+  { key: "company", label: "Company Identity" },
+  { key: "staff", label: "Staff Directory" },
+  { key: "lists", label: "Reference Lists" },
+  { key: "defaults", label: "Field Defaults" },
+  { key: "loa", label: "Letter of Award" },
+  { key: "email", label: "Email" },
+  { key: "api", label: "Companies Register" },
 ];
 
 function parseList(json: string | undefined): string[] {
@@ -198,6 +218,7 @@ function StaffSection({ role, label }: { role: StaffRole; label: string }) {
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [loaded, setLoaded] = useState(false);
+  const [section, setSection] = useState<SectionKey>("company");
   const [companyName, setCompanyName] = useState("");
   const [companyAddr1, setCompanyAddr1] = useState("");
   const [companyAddr2, setCompanyAddr2] = useState("");
@@ -244,13 +265,27 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     <Modal
       title="Settings"
       onClose={onClose}
-      width={680}
+      width={820}
       primaryActions={[{ label: "Close", variant: "primary", onClick: onClose }]}
     >
       {!loaded ? (
         <p>Loading…</p>
       ) : (
-        <div className="settings">
+        <div className="settings2">
+          <nav className="settings2__nav">
+            {NAV_SECTIONS.map(({ key, label }) => (
+              <button
+                key={key}
+                className={`settings2__navitem ${section === key ? "is-active" : ""}`}
+                onClick={() => setSection(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="settings2__content">
+          {section === "company" && (
           <div className="settings__section">
             <h4>Company Identity</h4>
             <div className="form">
@@ -283,11 +318,14 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           </div>
+          )}
 
-          {STAFF_ROLES.map(({ role, label }) => (
-            <StaffSection key={role} role={role} label={label} />
-          ))}
+          {section === "staff" &&
+            STAFF_ROLES.map(({ role, label }) => (
+              <StaffSection key={role} role={role} label={label} />
+            ))}
 
+          {section === "api" && (
           <div className="settings__section">
             <h4>NZ Companies Register API</h4>
             <p className="settings__note">
@@ -326,7 +364,9 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           </div>
+          )}
 
+          {section === "lists" && (
           <div className="settings__section">
             <h4>Reference Lists</h4>
             <p className="settings__note">
@@ -339,7 +379,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                   {key === "list_sub_trades" && (
                     <p className="settings__note">
                       One trade per line, as <code>Trade,Cost Code</code> (e.g.{" "}
-                      <code>Plumbing,623</code>) — the cost code builds the grid's
+                      <code>Plumbing,623</code>) - the cost code builds the grid's
                       auto-generated Code column.
                     </p>
                   )}
@@ -355,10 +395,14 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               ))}
             </div>
           </div>
+          )}
 
+          {section === "defaults" && <FieldDefaultsSection />}
+
+          {section === "loa" && (
           <div className="settings__section">
             <div className="settings__sectionhead">
-              <h4>Letter of Award — default body</h4>
+              <h4>Letter of Award - default body</h4>
               <button
                 className="btn btn--secondary"
                 onClick={() => {
@@ -380,10 +424,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               onBlur={() => saveScalar(LOA_GLOBAL_BODY_KEY, loaBody)}
             />
           </div>
+          )}
 
+          {section === "email" && (
           <div className="settings__section">
             <div className="settings__sectionhead">
-              <h4>Email — subject &amp; body</h4>
+              <h4>Email - subject &amp; body</h4>
               <button
                 className="btn btn--secondary"
                 onClick={() => {
@@ -401,7 +447,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
               Agreement and Letter of Award tabs. Placeholders{" "}
               <code>{"{{Document}}"}</code>, <code>{"{{Subcontractor}}"}</code>,{" "}
               <code>{"{{Project_Name}}"}</code> and <code>{"{{Project_Number}}"}</code>{" "}
-              are filled in automatically — <code>{"{{Document}}"}</code> becomes
+              are filled in automatically - <code>{"{{Document}}"}</code> becomes
               “Subcontract Agreement” or “Letter of Award”. You can type placeholders
               into the subject too.
             </p>
@@ -424,6 +470,8 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                 minHeight={160}
               />
             </div>
+          </div>
+          )}
           </div>
         </div>
       )}

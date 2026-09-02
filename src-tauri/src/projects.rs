@@ -206,7 +206,7 @@ pub fn set_field_value(
 ) -> Result<(), String> {
     let conn = state.0.lock().map_err(map_err)?;
     if value.is_empty() {
-        // Keep the table tidy — an empty value is the absence of a value.
+        // Keep the table tidy - an empty value is the absence of a value.
         conn.execute(
             "DELETE FROM field_values WHERE subcontractor_id = ?1 AND field_name = ?2",
             params![subcontractor_id, field_name],

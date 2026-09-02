@@ -8,10 +8,15 @@ import {
   loadContractInfo,
   buildMapping,
 } from "../lib/hyperformulaEngine";
+import {
+  SA_FIELD_DEFAULTS_KEY,
+  applyFieldDefaults,
+  parseFieldDefaults,
+} from "../lib/fieldDefaults";
 
 /**
  * Owns the HyperFormula Mapping-sheet pipeline (see hyperformulaEngine.ts /
- * mappingFormulas.ts) and pushes its output into `field_values` — the thing
+ * mappingFormulas.ts) and pushes its output into `field_values` - the thing
  * that actually drives the PDF tab. Both ContractInfoForm and
  * SubcontractorDetailsGrid call `recompute()` (debounced) after any edit,
  * since a Contract Info change affects every subcontractor's row and a grid
@@ -48,7 +53,15 @@ export function useMappingRecompute(project: Project | null, subs: Subcontractor
       engine,
       staffQs.map((s) => ({ name: s.name, email: s.email })),
     );
-    loadContractInfo(engine, contractInfo);
+    // Project Name / Job Number fall back to the project's own identity until
+    // the user overrides them in Contract Info - mirroring ContractInfoForm's
+    // `displayValues` so the PDF shows the same values the form does (otherwise
+    // a fresh project's Project_Name field stays blank until first edited).
+    loadContractInfo(engine, {
+      ...contractInfo,
+      project_name: contractInfo.project_name || project.name,
+      job_number: contractInfo.job_number || project.project_number,
+    });
 
     const mapped = buildMapping(engine, currentSubs, tpRowCount, staffQsRowCount, {
       companyName: settings.company_name ?? "",
@@ -56,11 +69,17 @@ export function useMappingRecompute(project: Project | null, subs: Subcontractor
       companyAddress2: settings.company_address_2 ?? "",
     });
 
+    // Global SA-form defaults fill any field the mapping left blank (the
+    // computed value always wins when present).
+    const defaults = parseFieldDefaults(settings[SA_FIELD_DEFAULTS_KEY]);
+
     await Promise.all(
       currentSubs.map((sub) =>
-        api.bulkSetFieldValues(sub.id, mapped[sub.id] ?? {}).catch((e) =>
-          console.error(`recompute push failed for subcontractor ${sub.id}`, e),
-        ),
+        api
+          .bulkSetFieldValues(sub.id, applyFieldDefaults(mapped[sub.id] ?? {}, defaults))
+          .catch((e) =>
+            console.error(`recompute push failed for subcontractor ${sub.id}`, e),
+          ),
       ),
     );
   }, [project]);
@@ -83,8 +102,8 @@ export function useMappingRecompute(project: Project | null, subs: Subcontractor
 
   // `recompute` (debounced, fire-and-forget) suits routine field edits.
   // `recomputeNow` (awaitable, immediate) is for callers like CSV import
-  // that need to keep a busy indicator up until the actual computation —
+  // that need to keep a busy indicator up until the actual computation -
   // which rebuilds the whole HyperFormula engine and can take real time
-  // for 20+ subcontractors — has genuinely finished, not just been scheduled.
+  // for 20+ subcontractors - has genuinely finished, not just been scheduled.
   return { recompute, recomputeNow };
 }

@@ -1,7 +1,7 @@
 // Stable column order for the hidden "ContractInfo" HyperFormula sheet used
 // by the Mapping sheet (see hyperformulaEngine.ts / mappingFormulas.ts).
 // Only field_keys actually referenced by the legacy workbook's "SA2025
-// Template" tab formulas are included here — e.g. Job Number, Site Address,
+// Template" tab formulas are included here - e.g. Job Number, Site Address,
 // and the Contract Info "3. Subcontractor Bonds & Guarantees" section
 // (Performance Bond / Bonds in Lieu) are real Contract Info fields but were
 // never wired into the original PDF mapping either (those are per-subcontractor
@@ -10,7 +10,7 @@
 // "email_to_serve_notices" is the one deliberate exception: the legacy
 // workbook's Email_to_Serve_Notices field was hardcoded to always output the
 // literal text "TRUE" (a bug in the source workbook, not a real Yes/No
-// answer) — it's now a real radio field here instead of perpetuating that.
+// answer) - it's now a real radio field here instead of perpetuating that.
 export const CONTRACT_INFO_CELL_ORDER: string[] = [
   "project_name",
   "principal",

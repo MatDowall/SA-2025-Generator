@@ -23,7 +23,7 @@ const MAX_FONT_PT = 11;
 const MIN_FONT_PT = 4;
 
 // pdf-lib's own auto font-size (fontSize: 0) picks the *largest* size that
-// fits the field's box — for a short value like "N/A" in a tall field that
+// fits the field's box - for a short value like "N/A" in a tall field that
 // means it balloons to a huge, jarring size. Pick the largest size up to a
 // sane cap that still fits (falling back to ever-smaller sizes only for
 // genuinely long values), rather than letting it grow unbounded.
@@ -69,14 +69,14 @@ export async function fillTemplate(
     if (!field || rawValue == null || rawValue === "") continue;
     // Monetary/percentage fields are stored as plain numbers (e.g. from the
     // grid's SUBTOTAL formulas) and only get comma-thousands formatting in
-    // the live overlay's display layer (FieldOverlay.tsx) — apply the same
+    // the live overlay's display layer (FieldOverlay.tsx) - apply the same
     // formatting here so the exported PDF matches what was previewed.
     const raw = NUMERIC_FIELD_NAMES.has(name) ? formatNumeric(rawValue) : rawValue;
     try {
       if (field instanceof PDFTextField) {
         // The template doesn't flag these fields multiline, so pdf-lib's
         // single-line appearance clips any value wider than the field's
-        // rect instead of wrapping (the stored value itself is unaffected —
+        // rect instead of wrapping (the stored value itself is unaffected -
         // this is purely an appearance-stream issue). Force multiline so
         // long values (e.g. "Specific Condition Data" free text) wrap
         // instead of clip, and pick a capped, shrink-as-needed font size

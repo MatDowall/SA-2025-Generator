@@ -282,7 +282,7 @@ export function ContractInfoForm({
   }, []);
 
   // Prefill Job Number/Project Name from the project's own identity (set at
-  // creation time) until the user edits them here — same "show until
+  // creation time) until the user edits them here - same "show until
   // overridden" behavior as a field's static default, just sourced from the
   // project instead of a fixed string.
   const displayValues = useMemo(() => {

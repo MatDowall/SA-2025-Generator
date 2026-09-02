@@ -102,7 +102,7 @@
 }
 
 /* Handsontable's wrapper renders one direct child div holding the actual
-   table — flex-grow it so it isn't sized via an ambiguous percentage-height
+   table - flex-grow it so it isn't sized via an ambiguous percentage-height
    chain through non-flex ancestors (see TpCompaniesGrid.css for why). */
 .sdgrid__table > div {
   flex: 1 1 auto;
@@ -111,7 +111,7 @@
 
 /* Darken the sheet's grid dividers. Derived from the theme's own foreground
    colour via color-mix so it reads correctly whether the grid renders in light
-   or dark — rather than hard-coded values that assume a mode. */
+   or dark - rather than hard-coded values that assume a mode. */
 .ht-theme-main {
   --ht-border-color: color-mix(in srgb, var(--ht-foreground-color) 28%, transparent) !important;
   --ht-cell-horizontal-border-color: color-mix(in srgb, var(--ht-foreground-color) 28%, transparent) !important;

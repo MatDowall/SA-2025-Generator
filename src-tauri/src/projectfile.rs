@@ -1,6 +1,6 @@
 // Project export/import (Milestone 7). A `.saproj` file is a self-contained,
-// versioned JSON snapshot of a project — its details, subcontractors, and every
-// field value — so a project round-trips with 100% data integrity.
+// versioned JSON snapshot of a project - its details, subcontractors, and every
+// field value - so a project round-trips with 100% data integrity.
 use crate::db::Db;
 use crate::projects::Project;
 use rusqlite::params;
@@ -15,12 +15,33 @@ fn map_err<E: std::fmt::Display>(e: E) -> String {
 const FORMAT_TAG: &str = "saproj";
 const FORMAT_VERSION: u32 = 1;
 
+/// Send/return audit trail for one subcontractor (mirrors subcontractor_audit).
+/// Optional so older `.saproj` files without it still import.
+#[derive(Serialize, Deserialize, Default)]
+struct SaAudit {
+    loa_sent_date: Option<String>,
+    sa_sent_date: Option<String>,
+    sa_returned_date: Option<String>,
+    notes: Option<String>,
+}
+
+impl SaAudit {
+    fn is_empty(&self) -> bool {
+        self.loa_sent_date.is_none()
+            && self.sa_sent_date.is_none()
+            && self.sa_returned_date.is_none()
+            && self.notes.is_none()
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct SaSubcontractor {
     name: String,
     ordering: i64,
     /// AcroForm field name -> value (BTreeMap keeps output stable/diffable).
     fields: BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    audit: Option<SaAudit>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -71,6 +92,13 @@ pub fn export_project_file(
         .prepare("SELECT field_name, value FROM field_values WHERE subcontractor_id = ?1")
         .map_err(map_err)?;
 
+    let mut audit_stmt = conn
+        .prepare(
+            "SELECT loa_sent_date, sa_sent_date, sa_returned_date, notes \
+             FROM subcontractor_audit WHERE subcontractor_id = ?1",
+        )
+        .map_err(map_err)?;
+
     let mut subcontractors = Vec::with_capacity(subs.len());
     for (sub_id, name, ordering) in subs {
         let mut fields = BTreeMap::new();
@@ -83,10 +111,22 @@ pub fn export_project_file(
             let (fname, val) = row.map_err(map_err)?;
             fields.insert(fname, val.unwrap_or_default());
         }
+        let audit = audit_stmt
+            .query_row(params![sub_id], |r| {
+                Ok(SaAudit {
+                    loa_sent_date: r.get(0)?,
+                    sa_sent_date: r.get(1)?,
+                    sa_returned_date: r.get(2)?,
+                    notes: r.get(3)?,
+                })
+            })
+            .ok()
+            .filter(|a: &SaAudit| !a.is_empty());
         subcontractors.push(SaSubcontractor {
             name,
             ordering,
             fields,
+            audit,
         });
     }
 
@@ -151,6 +191,21 @@ pub fn import_project_file(state: State<'_, Db>, path: String) -> Result<Project
             tx.execute(
                 "INSERT INTO field_values (subcontractor_id, field_name, value) VALUES (?1, ?2, ?3)",
                 params![sub_id, fname, value],
+            )
+            .map_err(map_err)?;
+        }
+        if let Some(a) = sub.audit.as_ref().filter(|a| !a.is_empty()) {
+            tx.execute(
+                "INSERT INTO subcontractor_audit \
+                   (subcontractor_id, loa_sent_date, sa_sent_date, sa_returned_date, notes) \
+                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                params![
+                    sub_id,
+                    a.loa_sent_date,
+                    a.sa_sent_date,
+                    a.sa_returned_date,
+                    a.notes,
+                ],
             )
             .map_err(map_err)?;
         }

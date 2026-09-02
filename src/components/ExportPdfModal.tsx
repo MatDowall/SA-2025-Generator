@@ -62,7 +62,7 @@ export function ExportPdfModal({
             />
             <span>
               Current subcontractor
-              {activeName ? ` — ${activeName}` : ""}
+              {activeName ? ` - ${activeName}` : ""}
             </span>
           </label>
           <label className="radioset__opt">
@@ -72,7 +72,7 @@ export function ExportPdfModal({
               checked={scope === "batch"}
               onChange={() => setScope("batch")}
             />
-            <span>All subcontractors ({subCount}) — zipped</span>
+            <span>All subcontractors ({subCount}) - zipped</span>
           </label>
         </fieldset>
 
@@ -86,7 +86,7 @@ export function ExportPdfModal({
               onChange={() => setFormat("flat")}
             />
             <span>
-              Flattened — values baked in, not editable
+              Flattened - values baked in, not editable
             </span>
           </label>
           <label className="radioset__opt">
@@ -96,7 +96,7 @@ export function ExportPdfModal({
               checked={format === "fillable"}
               onChange={() => setFormat("fillable")}
             />
-            <span>Fillable — form fields remain editable</span>
+            <span>Fillable - form fields remain editable</span>
           </label>
         </fieldset>
       </div>

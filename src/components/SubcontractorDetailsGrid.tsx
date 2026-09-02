@@ -90,7 +90,7 @@ export function SubcontractorDetailsGrid({
 
         // Self-heal any already-stored comma-corrupted numeric value (see
         // onAfterChange's sanitize step) so old data doesn't keep tripping up
-        // SUBTOTAL even after the bug that wrote it is fixed — and actually
+        // SUBTOTAL even after the bug that wrote it is fixed - and actually
         // persist the correction (not just patch the in-memory copy), since
         // other readers of the same data (e.g. the recompute pipeline's own
         // separate engine) would otherwise keep re-fetching the corrupted
@@ -113,12 +113,12 @@ export function SubcontractorDetailsGrid({
         for (const { trade, code } of subTradeEntries) codeByTrade[trade] = code;
         // Contract Info's Job Number field only *displays* a fallback to the
         // project's own number until the user types into it (see
-        // ContractInfoForm's displayValues) — api.getContractInfo returns the
+        // ContractInfoForm's displayValues) - api.getContractInfo returns the
         // real stored value, which is empty in that case, so apply the same
         // fallback here.
         const job = contractInfo.job_number || project.project_number || "";
 
-        // The Code column is app-derived, not user-entered — recompute it
+        // The Code column is app-derived, not user-entered - recompute it
         // from the current Trade + Settings cost codes + job number on every
         // load (rather than trusting whatever was last persisted), and
         // persist the correction so PDF generation picks up the same value.
@@ -174,7 +174,7 @@ export function SubcontractorDetailsGrid({
   }, [project?.id, subs.length]);
 
   // Re-apply whenever the query changes *or* the grid gets a fresh data set
-  // (e.g. switching projects) — a previous trim's physical row indices
+  // (e.g. switching projects) - a previous trim's physical row indices
   // don't track a wholesale data swap.
   useEffect(() => {
     const hot = hotRef.current?.hotInstance;
@@ -207,7 +207,7 @@ export function SubcontractorDetailsGrid({
           base.source = dropdownOptionsByListKey[col.settingsListKey!] ?? [];
         } else if (col.type === "name-mirror") {
           // Autocomplete (not a strict dropdown) against TP Companies' names
-          // — D/E's XLOOKUP needs an exact match to find an address/email,
+          // - D/E's XLOOKUP needs an exact match to find an address/email,
           // but a brand-new subcontractor not yet in TP Companies should
           // still be enterable as free text.
           base.type = "autocomplete";
@@ -217,7 +217,7 @@ export function SubcontractorDetailsGrid({
         } else if (col.type === "number") {
           base.type = "numeric";
           // Explicit format (rather than relying on Handsontable's locale
-          // default) — without this, the numeric editor can write the
+          // default) - without this, the numeric editor can write the
           // *formatted* display string (with thousands separators) back into
           // the source data on commit, which then fails to parse as a number
           // downstream (HyperFormula's SUBTOTAL silently treats it as 0).
@@ -228,7 +228,7 @@ export function SubcontractorDetailsGrid({
     [dropdownOptionsByListKey, tpCompanyNames],
   );
 
-  // A single gesture can touch a huge number of cells at once — e.g.
+  // A single gesture can touch a huge number of cells at once - e.g.
   // selecting the top-left corner ("select all") and pressing Delete emits one
   // change per editable cell across every row. The old code did a separate DB
   // write, HyperFormula recompute, and DOM sync *per cell*, which froze the app
@@ -266,7 +266,7 @@ export function SubcontractorDetailsGrid({
 
         // `changes` reports a visual row index, but the source-data APIs
         // below (and the HyperFormula engine, which mirrors physical row
-        // order) take physical row indices — the two diverge once the
+        // order) take physical row indices - the two diverge once the
         // search filter trims rows.
         const rowIndex = hot.toPhysicalRow(visualRow);
         if (rowIndex === null) continue;
@@ -276,7 +276,7 @@ export function SubcontractorDetailsGrid({
         if (col.type === "number" && value) {
           // Defensive backstop: strip thousands-separator commas regardless of
           // why they might be there (e.g. a numeric editor echoing its own
-          // display formatting back into source data) — a comma-containing
+          // display formatting back into source data) - a comma-containing
           // string silently fails numeric parsing downstream (HyperFormula's
           // SUBTOTAL would treat it as 0 rather than erroring).
           const sanitized = value.replace(/,/g, "");
@@ -290,7 +290,7 @@ export function SubcontractorDetailsGrid({
           const trimmed = value.trim();
           if (!trimmed) {
             // Clearing the Subcontractor cell isn't a valid edit: the name is
-            // the row's identity — it drives the sidebar label, the PDF
+            // the row's identity - it drives the sidebar label, the PDF
             // filename, the PDF's Subcontractor_Name field, and D/E's address
             // lookup, all of which stay populated. Leaving B blank would make
             // the grid silently contradict every other surface (and strand
@@ -306,12 +306,12 @@ export function SubcontractorDetailsGrid({
             continue;
           }
           if (!row._subId) {
-            // A blank spare row just got a name typed into it — this *is* the
+            // A blank spare row just got a name typed into it - this *is* the
             // "add a subcontractor" action now, not a prerequisite for one.
             //
             // Anything already typed into *other* columns of this spare row
             // (e.g. a Trade in column A) only lived in the grid's in-memory
-            // source data until now — there was no subcontractor id to persist
+            // source data until now - there was no subcontractor id to persist
             // it against. Creating the subcontractor triggers a reload from the
             // database (subs.length changes), which would wipe those unsaved
             // values, so capture and persist them against the new id first.
@@ -334,7 +334,7 @@ export function SubcontractorDetailsGrid({
             onRenameSubcontractor(row._subId, trimmed)
               .then(onChanged)
               .catch((e) => console.error("rename failed", e));
-            // The name is the XLOOKUP key for D/E — recompute this row.
+            // The name is the XLOOKUP key for D/E - recompute this row.
             const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
             setCell(engine, rowIndex, colIndex, trimmed);
             let entry = editsByRow.get(rowIndex);
@@ -346,7 +346,7 @@ export function SubcontractorDetailsGrid({
           continue;
         }
 
-        if (!row._subId) continue; // blank spare row with no name yet — nothing to persist to
+        if (!row._subId) continue; // blank spare row with no name yet - nothing to persist to
 
         const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
         setCell(engine, rowIndex, colIndex, value);
@@ -366,7 +366,7 @@ export function SubcontractorDetailsGrid({
         anyEdit = true;
       }
     } finally {
-      // Resume once — HyperFormula recalculates all dependents in one pass.
+      // Resume once - HyperFormula recalculates all dependents in one pass.
       engine.resumeEvaluation();
     }
 
@@ -401,7 +401,7 @@ export function SubcontractorDetailsGrid({
 
     // Snapshot the changes (Handsontable may recycle the array) and defer the
     // heavy work until after the browser has painted the overlay. A single rAF
-    // fires before paint; a second, nested rAF runs after it — guaranteeing the
+    // fires before paint; a second, nested rAF runs after it - guaranteeing the
     // "Processing…" state is actually on screen before we block the thread.
     const snapshot = changes.slice();
     setIsProcessing(true);

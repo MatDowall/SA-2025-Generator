@@ -1,18 +1,18 @@
 // Opens the OS default mail client with a ready-to-review *draft* that already
 // has the given PDF attached and (where known) the recipient filled in.
 //
-// There's no SMTP/mail integration in the app — instead we generate an RFC 822
+// There's no SMTP/mail integration in the app - instead we generate an RFC 822
 // `.eml` file with the PDF as a base64 MIME attachment and open it with the
 // platform's default `.eml` handler (Outlook / Windows Mail). The `X-Unsent: 1`
 // header tells Outlook to open it as an unsent, editable draft rather than a
-// received message, so the user reviews it and hits Send themselves — the app
+// received message, so the user reviews it and hits Send themselves - the app
 // never sends anything on its own.
 import { tempDir, join } from "@tauri-apps/api/path";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { api, type TpCompany } from "../api";
 
 /** The trade partner's email for a subcontractor, matched by name against TP
- *  Companies — the same key the grid's D/E XLOOKUP uses (the `company` /
+ *  Companies - the same key the grid's D/E XLOOKUP uses (the `company` /
  *  trading-name column). Returns "" when there's no match or no email on file,
  *  leaving the draft's recipient blank for the user to fill in. */
 export function recipientEmailForSub(subName: string, tpCompanies: TpCompany[]): string {

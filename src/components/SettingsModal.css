@@ -105,3 +105,95 @@
   resize: vertical;
   font-family: inherit;
 }
+
+.fielddefaults {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fielddefaults__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fielddefaults__label {
+  flex: 1 1 40%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fielddefaults__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fielddefaults__meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.fielddefaults__automark {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.fielddefaults__editor {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+.fielddefaults__add {
+  margin-top: 4px;
+}
+
+/* Two-pane settings layout: left nav + right content (fills the modal body). */
+.settings2 {
+  display: flex;
+  height: min(64vh, 580px);
+  margin: -16px;
+}
+
+.settings2__nav {
+  flex: 0 0 200px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings2__navitem {
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.settings2__navitem:hover {
+  background: var(--bg-hover);
+}
+
+.settings2__navitem.is-active {
+  background: var(--bg-active);
+  font-weight: 600;
+}
+
+.settings2__content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

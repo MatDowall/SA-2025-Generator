@@ -1,3 +1,4 @@
+mod audit;
 mod compute;
 mod contract_info;
 mod db;
@@ -30,7 +31,7 @@ fn get_launch_file() -> Option<String> {
     find_saproj_arg(std::env::args())
 }
 
-/// Loads the bundled field-map.json (generated from the template PDF — the
+/// Loads the bundled field-map.json (generated from the template PDF - the
 /// single source of truth for AcroForm field names). Returned as a raw JSON
 /// string so the frontend can parse it directly.
 #[tauri::command]
@@ -45,7 +46,7 @@ fn get_field_map(app: tauri::AppHandle) -> Result<String, String> {
     std::fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))
 }
 
-/// Returns the bundled blank template PDF as raw bytes (efficient binary IPC —
+/// Returns the bundled blank template PDF as raw bytes (efficient binary IPC -
 /// the frontend receives an ArrayBuffer and hands it to pdf.js).
 #[tauri::command]
 fn get_template_pdf(app: tauri::AppHandle) -> Result<tauri::ipc::Response, String> {
@@ -179,6 +180,8 @@ pub fn run() {
             grid_values::get_grid_values_for_project,
             grid_values::bulk_set_grid_values,
             compute::bulk_set_field_values,
+            audit::get_audit_for_project,
+            audit::set_audit,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

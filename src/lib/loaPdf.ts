@@ -19,7 +19,7 @@ const CONTENT_BOTTOM = 92;
 
 const FONT_SIZE = 10.5;
 const LINE_HEIGHT = 13.5;
-// A blank line in the template is a paragraph break — a compact gap, not a full
+// A blank line in the template is a paragraph break - a compact gap, not a full
 // empty text line, so the letter stays on a single page like the original.
 const BLANK_GAP = 8;
 const PARA_GAP = 7;
@@ -105,7 +105,7 @@ function drawFooter(page: PDFPage, font: PDFFont, fontBold: PDFFont) {
 
 /**
  * Render a letter to PDF bytes.
- * @param body   the (unmerged) body template — placeholders still present.
+ * @param body   the (unmerged) body template - placeholders still present.
  * @param values resolved merge values for this subcontractor.
  */
 export async function renderLetterOfAward(

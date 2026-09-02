@@ -127,9 +127,97 @@
 }
 
 .sublist__name {
+  flex: 1 1 auto;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sublist__badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.audit-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  padding: 3px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* Informative (LOA sent - a one-way document, nothing outstanding). */
+.audit-pill--info {
+  background: #dce8fb;
+  color: #1c4bb0;
+  border-color: #b6cdf5;
+}
+
+/* Awaiting (SA sent - the signed copy is still outstanding). */
+.audit-pill--await {
+  background: #fbecd2;
+  color: #8a5a12;
+  border-color: #eccf9c;
+}
+
+.audit-pill--returned {
+  background: #d8f0e0;
+  color: #1c6b3d;
+  border-color: #a9dcbd;
+}
+
+@media (prefers-color-scheme: dark) {
+  .audit-pill--info {
+    background: #23324d;
+    color: #86b0f5;
+    border-color: #33507e;
+  }
+  .audit-pill--await {
+    background: #4a3a1c;
+    color: #f0c580;
+    border-color: #6a5326;
+  }
+  .audit-pill--returned {
+    background: #1e3d2b;
+    color: #85d6a5;
+    border-color: #2f5c40;
+  }
+}
+
+/* Right-click context menu */
+.ctxmenu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 150px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  padding: 4px;
+}
+
+.ctxmenu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ctxmenu__item:hover {
+  background: var(--bg-hover);
 }
 
 .sublist__actions {

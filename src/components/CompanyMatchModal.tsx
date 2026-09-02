@@ -13,7 +13,7 @@ export interface CompanyMatchModalProps {
 }
 
 // Shown whenever a Companies Register check can't auto-resolve to a single
-// exact name match — lets the user pick the right entity from the candidates
+// exact name match - lets the user pick the right entity from the candidates
 // the NZBN API returned, or close without applying anything.
 export function CompanyMatchModal({
   searchTerm,

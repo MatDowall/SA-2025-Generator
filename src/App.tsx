@@ -16,6 +16,7 @@ import { UpdateBanner } from "./components/UpdateBanner";
 import { AboutModal } from "./components/AboutModal";
 import { SettingsModal } from "./components/SettingsModal";
 import { ImportProgressOverlay } from "./components/ImportProgressOverlay";
+import { AuditLogModal, todayIso } from "./components/AuditLogModal";
 import {
   ExportPdfModal,
   type ExportScope,
@@ -31,6 +32,8 @@ import { loadEmailTemplates, renderEmailTemplate } from "./lib/emailTemplate";
 import { zipSync } from "fflate";
 import {
   api,
+  emptyAudit,
+  type Audit,
   type Project,
   type Subcontractor,
   type ImportReport,
@@ -55,6 +58,8 @@ type Dialog =
   | { kind: "renameSub"; sub: Subcontractor }
   | { kind: "confirmDeleteProject"; project: Project }
   | { kind: "confirmDeleteSub"; sub: Subcontractor }
+  | { kind: "auditLog"; sub: Subcontractor }
+  | { kind: "confirmSent"; sub: Subcontractor; doc: "loa" | "sa" }
   | { kind: "exportCsv" }
   | { kind: "exportPdf" }
   | { kind: "importReport"; path: string; report: ImportReport }
@@ -85,6 +90,9 @@ function App() {
   // Project workspace
   const [project, setProject] = useState<Project | null>(null);
   const [subs, setSubs] = useState<Subcontractor[]>([]);
+  // Send/return audit records, keyed by subcontractor id (missing = nothing
+  // logged yet). Drives the sidebar status dots and the Audit Log modal.
+  const [audits, setAudits] = useState<Record<number, Audit>>({});
   const [activeSubId, setActiveSubId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<Dialog>({ kind: "none" });
   const close = () => setDialog({ kind: "none" });
@@ -93,7 +101,7 @@ function App() {
   >(null);
 
   // Recomputes field_values from Contract Info + Subcontractor Details
-  // (the single source of truth) — lives here, not inside SubcontractInfoView,
+  // (the single source of truth) - lives here, not inside SubcontractInfoView,
   // so it stays active (and reachable from e.g. CSV import) regardless of
   // which top-level tab is showing.
   const { recompute: recomputeFieldValues, recomputeNow: recomputeFieldValuesNow } =
@@ -127,12 +135,12 @@ function App() {
   } = useDebouncedFieldSave(activeSubId, api.getFieldValues, api.setFieldValue);
 
   // The PDF overlay is directly editable, but field_values is otherwise
-  // purely computed from Contract Info + Subcontractor Details — without
+  // purely computed from Contract Info + Subcontractor Details - without
   // this, a PDF-direct edit would just get silently overwritten by the next
   // recompute. Mirror any edit that has a reverse-map target back into the
   // grid/Contract Info so the two stay in sync regardless of which surface
   // the user actually typed into.
-  // Keyed by field name — a single shared timer would let editing field B
+  // Keyed by field name - a single shared timer would let editing field B
   // cancel field A's still-pending sync (e.g. tabbing through several PDF
   // fields inside one debounce window), silently dropping A's write.
   const pdfReverseSyncTimers = useRef<Map<string, number>>(new Map());
@@ -165,7 +173,7 @@ function App() {
   );
 
   // The Subcontract Info recompute pipeline writes fresh field_values in the
-  // background while the user is on that tab — useDebouncedFieldSave only
+  // background while the user is on that tab - useDebouncedFieldSave only
   // reloads when activeSubId itself changes, so without this the PDF tab
   // would keep showing stale values after switching back without having
   // changed which subcontractor is active.
@@ -192,12 +200,31 @@ function App() {
 
   const openProject = useCallback(async (p: Project) => {
     const list = await api.listSubcontractors(p.id);
+    const auditMap = await api.getAuditForProject(p.id).catch(() => ({}));
     setProject(p);
     setSubs(list);
+    setAudits(auditMap);
     setActiveSubId(list[0]?.id ?? null);
     await api.setLastProject(p.id);
     close();
   }, []);
+
+  // Persist one subcontractor's audit record and mirror it into local state so
+  // the sidebar badge updates immediately.
+  const saveAudit = useCallback(async (audit: Audit) => {
+    setAudits((prev) => ({ ...prev, [audit.subcontractor_id]: audit }));
+    await api.setAudit(audit);
+  }, []);
+
+  // Merge a partial change (e.g. one auto-populated sent date) into a sub's
+  // existing audit record and persist it.
+  const patchAudit = useCallback(
+    (subId: number, patch: Partial<Audit>) => {
+      const current = audits[subId] ?? emptyAudit(subId);
+      return saveAudit({ ...current, ...patch });
+    },
+    [audits, saveAudit],
+  );
 
   // Restore the last-opened project on startup.
   useEffect(() => {
@@ -230,6 +257,7 @@ function App() {
     if (project?.id === p.id) {
       setProject(null);
       setSubs([]);
+      setAudits({});
       setActiveSubId(null);
       await api.setLastProject(null);
     }
@@ -259,7 +287,7 @@ function App() {
       if (!project) throw new Error("No project open");
       const s = await api.addSubcontractor(project.id, name);
       // Persist any values already typed into the same (previously blank) grid
-      // row *before* setSubs, since that triggers the grid's reload-from-DB —
+      // row *before* setSubs, since that triggers the grid's reload-from-DB -
       // if the write hasn't committed by then, the reload wipes the values.
       if (initialGridValues && Object.keys(initialGridValues).length > 0) {
         await api.bulkSetGridValues(s.id, initialGridValues);
@@ -276,6 +304,10 @@ function App() {
   const deleteSub = async (s: Subcontractor) => {
     await api.deleteSubcontractor(s.id);
     setSubs((prev) => prev.filter((x) => x.id !== s.id));
+    setAudits((prev) => {
+      const { [s.id]: _removed, ...rest } = prev;
+      return rest;
+    });
     setActiveSubId((cur) => (cur === s.id ? null : cur));
     close();
   };
@@ -328,7 +360,7 @@ function App() {
 
   const commitImport = guard("CSV import failed", async (path: string) => {
     if (!project) return;
-    close(); // dismiss the report dialog — the progress overlay takes over
+    close(); // dismiss the report dialog - the progress overlay takes over
     try {
       const parsed = await api.parseImportCsv(path);
       setImportProgress({ current: 0, total: parsed.rows.length });
@@ -342,7 +374,7 @@ function App() {
       } else {
         setActiveSubId(list[0]?.id ?? null);
       }
-      // Keep the overlay up through this — it rebuilds the whole HyperFormula
+      // Keep the overlay up through this - it rebuilds the whole HyperFormula
       // engine across every subcontractor and can take real time, so it must
       // stay awaited under the same busy indicator rather than being kicked
       // off via the normal fire-and-forget debounced recompute.
@@ -515,6 +547,7 @@ function App() {
         pdfBytes: pdf,
       });
       setStatus(to ? `Email draft opened for ${to}` : "Email draft opened (no email on file)");
+      setDialog({ kind: "confirmSent", sub, doc: "sa" });
     } finally {
       setAgreementBusy(false);
     }
@@ -597,6 +630,8 @@ function App() {
                   onAddSubcontractor={() => setDialog({ kind: "addSub" })}
                   onRenameSubcontractor={(s) => setDialog({ kind: "renameSub", sub: s })}
                   onDeleteSubcontractor={(s) => setDialog({ kind: "confirmDeleteSub", sub: s })}
+                  audits={audits}
+                  onShowAuditLog={(s) => setDialog({ kind: "auditLog", sub: s })}
                 />
               </div>
               <div
@@ -663,6 +698,7 @@ function App() {
           activeSubId={activeSubId}
           onSelect={setActiveSubId}
           zoom={zoom}
+          onEmailed={(s) => setDialog({ kind: "confirmSent", sub: s, doc: "loa" })}
         />
       )}
 
@@ -679,7 +715,7 @@ function App() {
         onZoomReset={() => setZoom(1)}
         message={
           activeSub
-            ? `${project?.project_number} · ${project?.name} — ${activeSub.name}`
+            ? `${project?.project_number} · ${project?.name} - ${activeSub.name}`
             : project
               ? `${project.project_number} · ${project.name}`
               : status
@@ -757,6 +793,36 @@ function App() {
         />
       )}
 
+      {dialog.kind === "auditLog" && (
+        <AuditLogModal
+          subName={dialog.sub.name}
+          audit={audits[dialog.sub.id] ?? emptyAudit(dialog.sub.id)}
+          onSave={async (a) => {
+            await saveAudit(a);
+            close();
+          }}
+          onClose={close}
+        />
+      )}
+
+      {dialog.kind === "confirmSent" && (
+        <ConfirmModal
+          title="Mark as sent?"
+          confirmLabel="Mark sent"
+          danger={false}
+          message={`Record ${dialog.doc === "loa" ? "Letter of Award" : "Subcontract Agreement"} to “${dialog.sub.name}” as sent today (${todayIso()})?`}
+          onConfirm={async () => {
+            const patch: Partial<Audit> =
+              dialog.doc === "loa"
+                ? { loa_sent_date: todayIso() }
+                : { sa_sent_date: todayIso() };
+            await patchAudit(dialog.sub.id, patch);
+            close();
+          }}
+          onClose={close}
+        />
+      )}
+
       {dialog.kind === "exportCsv" && project && (
         <ExportCsvModal
           projectId={project.id}
@@ -799,7 +865,16 @@ function App() {
       )}
 
       {dialog.kind === "about" && <AboutModal onClose={close} />}
-      {dialog.kind === "settings" && <SettingsModal onClose={close} />}
+      {dialog.kind === "settings" && (
+        <SettingsModal
+          onClose={() => {
+            close();
+            // Field defaults / company identity may have changed - refresh the
+            // open project's field values so the change is reflected at once.
+            if (project) recomputeFieldValues();
+          }}
+        />
+      )}
 
       {importProgress && (
         <ImportProgressOverlay

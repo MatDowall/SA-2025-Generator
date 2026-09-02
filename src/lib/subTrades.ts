@@ -1,5 +1,5 @@
 // Settings' "Sub Trades" reference list stores one trade per line as
-// "Trade Name,Cost Code" (e.g. "Plumbing,623") — the cost code half drives
+// "Trade Name,Cost Code" (e.g. "Plumbing,623") - the cost code half drives
 // the Subcontractor Details grid's auto-generated Code column.
 export interface SubTradeEntry {
   trade: string;

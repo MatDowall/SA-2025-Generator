@@ -48,7 +48,7 @@ export function useDebouncedFieldSave(
         flushTimer.current = null;
       }
       if (id == null || pendingRef.current.size === 0) return;
-      // Snapshot the values now — valuesRef may be reassigned by an entity
+      // Snapshot the values now - valuesRef may be reassigned by an entity
       // switch before these awaits resolve.
       const snapshot = valuesRef.current;
       const pairs = [...pendingRef.current].map(

@@ -29,7 +29,7 @@ function activeRenderer(
     td.textContent = "Inactive";
     td.classList.add("tpgrid__active--no");
   } else {
-    td.textContent = "—";
+    td.textContent = "-";
     td.classList.add("tpgrid__active--unknown");
   }
   return td;
@@ -63,7 +63,7 @@ function matchStatusRenderer(
     td.textContent = MATCH_STATUS_LABEL[key];
     td.classList.add(`tpgrid__status--${key}`);
   } else {
-    td.textContent = "—";
+    td.textContent = "-";
     td.classList.add("tpgrid__status--unknown");
   }
   return td;
@@ -114,7 +114,7 @@ interface MatchModalState {
   results: NzbnSearchResult[];
 }
 
-// Fields the NZBN-match flow can update on a row — kept here so the grid sync
+// Fields the NZBN-match flow can update on a row - kept here so the grid sync
 // after a match and the backend's merge in apply_nzbn_match stay in step.
 const NZBN_MATCH_FIELDS: (keyof TpCompany)[] = [
   "legal_name_register",
@@ -143,13 +143,13 @@ export function TpCompaniesGrid() {
   const [matchModal, setMatchModal] = useState<MatchModalState | null>(null);
   const [bulkRunning, setBulkRunning] = useState(false);
   // Kept separate from `bulkResultsOpen` so dismissing the modal doesn't throw
-  // away the candidates it fetched — the user can reopen the same results via
+  // away the candidates it fetched - the user can reopen the same results via
   // the toolbar without re-running the (slow, rate-limited) bulk API check.
   const [bulkResults, setBulkResults] = useState<BulkResultsState | null>(null);
   const [bulkResultsOpen, setBulkResultsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const hotRef = useRef<HotTableRef>(null);
-  // Ids captured by beforeRemoveRow, consumed by afterRemoveRow — by the time
+  // Ids captured by beforeRemoveRow, consumed by afterRemoveRow - by the time
   // "after" fires, Handsontable has already spliced the row out, so its data
   // (and id) must be read before that happens.
   const pendingDeleteIds = useRef<number[]>([]);
@@ -162,7 +162,7 @@ export function TpCompaniesGrid() {
   }, []);
 
   // Re-apply whenever the query changes *or* the grid gets fresh data (e.g.
-  // after a bulk register check reload) — a previous trim's physical row
+  // after a bulk register check reload) - a previous trim's physical row
   // indices don't track a wholesale data swap.
   useEffect(() => {
     const hot = hotRef.current?.hotInstance;
@@ -171,7 +171,7 @@ export function TpCompaniesGrid() {
 
   // These are passed as ordinary HotTable props (not registered manually via
   // addHook) so the wrapper's own lifecycle management keeps them attached
-  // to whichever instance is actually live — manual addHook/removeHook in a
+  // to whichever instance is actually live - manual addHook/removeHook in a
   // separate effect raced with React StrictMode's dev-only double-mount and
   // ended up attached to an instance that had already been destroyed.
   // Each handler looks up `hotRef.current` fresh at call time (not a closure
@@ -201,7 +201,7 @@ export function TpCompaniesGrid() {
   const SYNC_SOURCE = "TpCompaniesGrid.sync";
 
   // Fetches detail for `nzbn` and writes the resulting fields straight into
-  // the live grid row — used both after the modal's "Use Selected" and after
+  // the live grid row - used both after the modal's "Use Selected" and after
   // an auto-resolved exact match.
   const applyMatch = useCallback(async (rowIndex: number, companyId: number, nzbn: string) => {
     const hot = hotRef.current?.hotInstance;
@@ -213,8 +213,8 @@ export function TpCompaniesGrid() {
   }, []);
 
   // Searches the NZBN register for `name`. A single exact (case/whitespace
-  // insensitive) name match applies automatically; anything else — zero
-  // matches, several matches, or only fuzzy matches — opens the picker modal.
+  // insensitive) name match applies automatically; anything else - zero
+  // matches, several matches, or only fuzzy matches - opens the picker modal.
   const runRegisterCheck = useCallback(
     async (rowIndex: number, companyId: number, name: string) => {
       setMatchModal({ rowIndex, companyId, searchTerm: name, loading: true, error: null, results: [] });
@@ -239,7 +239,7 @@ export function TpCompaniesGrid() {
     if (!hot || !changes || source === "loadData" || (source as string) === SYNC_SOURCE) return;
     // A typed-in change to the Legal Name From Companies Register column
     // re-triggers the same register check a right-click "Check Companies
-    // Register" would — that column best matches the NZBN register, unlike
+    // Register" would - that column best matches the NZBN register, unlike
     // the (often informal) Company trading name in column A.
     const legalNameChangedRows = new Set(
       changes
@@ -251,7 +251,7 @@ export function TpCompaniesGrid() {
     );
     // `changes` reports visual row indices, but the rest of this handler
     // reads/writes via the *source* data APIs, which take physical row
-    // indices — the two diverge once the search filter trims rows.
+    // indices - the two diverge once the search filter trims rows.
     const affectedRows = new Set(
       changes.map(([row]) => hot.toPhysicalRow(row)).filter((r): r is number => r !== null),
     );
@@ -260,19 +260,19 @@ export function TpCompaniesGrid() {
       if (!row || !row.company || row.company.trim() === "") continue;
       // A blank spare row's id/ordering are explicitly null (Handsontable's
       // default for an unset cell), but the backend's TpCompany requires
-      // real integers for those — null only round-trips through Option<T>
+      // real integers for those - null only round-trips through Option<T>
       // fields, not i64. Normalize before sending.
       const payload: TpCompany = { ...row, id: row.id ?? 0, ordering: row.ordering ?? 0 };
       api
         .upsertTpCompany(payload)
         .then((saved) => {
           // getSourceDataAtRow returns a detached snapshot, not a live
-          // reference — mutating it directly never reaches Handsontable's
+          // reference - mutating it directly never reaches Handsontable's
           // actual data store. setSourceDataAtCell is the real write API.
           hot.setSourceDataAtCell(rowIndex, "id", saved.id, SYNC_SOURCE);
           hot.setSourceDataAtCell(rowIndex, "ordering", saved.ordering, SYNC_SOURCE);
           // upsertTpCompany's insert path always appends new rows to the end
-          // of the ordering sequence — re-sync every row's ordering to match
+          // of the ordering sequence - re-sync every row's ordering to match
           // its current on-screen position so a row typed into the middle of
           // the grid (e.g. via "insert row above") stays there on reload.
           const orderedIds = (hot.getSourceData() as TpCompany[])

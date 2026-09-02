@@ -1,4 +1,4 @@
-// Field schema for the "Contract Info" tab — a native replacement for the
+// Field schema for the "Contract Info" tab - a native replacement for the
 // legacy workbook's "Contract Info" sheet. field_key values are the
 // persistence keys (contract_info_values.field_key), not AcroForm field
 // names (those only exist downstream, in the future Mapping-sheet output).
@@ -10,7 +10,7 @@ export type ContractInfoFieldType =
   | "select"
   | "percent-value"
   | "text-select"
-  /** Not a field in the PDF — a sub-heading label above the fields that follow it. */
+  /** Not a field in the PDF - a sub-heading label above the fields that follow it. */
   | "heading";
 
 export interface ContractInfoField {
@@ -187,7 +187,7 @@ export const CONTRACT_INFO_RIGHT: ContractInfoSection[] = [
     title: "10. Time",
     fields: [
       { key: "due_dates_pc_head_contract", label: "10.1.1 Due dates for practical completion of Head Contract", type: "text" },
-      { key: "due_dates_pc_head_contract_separable", label: "10.1.1 Due dates for PC of Head Contract — separable portions", type: "text" },
+      { key: "due_dates_pc_head_contract_separable", label: "10.1.1 Due dates for PC of Head Contract - separable portions", type: "text" },
       { key: "liquidated_damages_heading", label: "10.4.1 Liquidated damages", type: "heading" },
       {
         key: "lds_applicable_head_contract",
@@ -199,7 +199,7 @@ export const CONTRACT_INFO_RIGHT: ContractInfoSection[] = [
       },
       {
         key: "lds_applicable_head_contract_separable",
-        label: "10.5.1 LDs applicable under Head Contract — separable portions",
+        label: "10.5.1 LDs applicable under Head Contract - separable portions",
         type: "text-select",
         textKey: "lds_applicable_head_contract_separable_value",
         selectKey: "lds_applicable_head_contract_separable_unit",
@@ -260,7 +260,7 @@ export const CONTRACT_INFO_RIGHT: ContractInfoSection[] = [
     title: "Project Contact Details",
     fields: [
       // Options are populated at render time from the staff_directory (PM/BTM/QS
-      // roles, managed via Settings) — see ContractInfoForm's dynamicOptions.
+      // roles, managed via Settings) - see ContractInfoForm's dynamicOptions.
       { key: "project_manager", label: "Project Manager", type: "select", options: [] },
       { key: "site_manager", label: "Site Manager", type: "select", options: [] },
       { key: "quantity_surveyor", label: "Quantity Surveyor", type: "select", options: [] },

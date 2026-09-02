@@ -102,7 +102,34 @@ export const api = {
   applyNzbnMatch: (companyId: number, nzbn: string) =>
     invoke<TpCompany>("apply_nzbn_match", { companyId, nzbn }),
   bulkCheckTpCompanies: () => invoke<BulkCheckResult[]>("bulk_check_tp_companies"),
+
+  getAuditForProject: (projectId: number) =>
+    invoke<Record<number, Audit>>("get_audit_for_project", { projectId }),
+  setAudit: (audit: Audit) => invoke<void>("set_audit", { audit }),
 };
+
+/** Send/return audit trail for one subcontractor. Dates are ISO strings
+ *  (YYYY-MM-DD); any field may be null when unset. `loa` = Letter of Award
+ *  (send-only, one-way document), `sa` = Subcontract Agreement. */
+export interface Audit {
+  subcontractor_id: number;
+  loa_sent_date: string | null;
+  sa_sent_date: string | null;
+  sa_returned_date: string | null;
+  notes: string | null;
+}
+
+/** An audit record with every field cleared - the default before anything is
+ *  logged for a subcontractor. */
+export function emptyAudit(subcontractorId: number): Audit {
+  return {
+    subcontractor_id: subcontractorId,
+    loa_sent_date: null,
+    sa_sent_date: null,
+    sa_returned_date: null,
+    notes: null,
+  };
+}
 
 export interface TpCompany {
   id: number;

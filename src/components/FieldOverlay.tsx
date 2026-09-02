@@ -223,7 +223,7 @@ export function FieldOverlay({
           fontSize: fitFontSize(val, boxW, boxH, !!b.multiline, b.fontSize, zoom),
         };
 
-        // Numeric/monetary fields are always short single-line values —
+        // Numeric/monetary fields are always short single-line values -
         // check this before the multiline textarea branch below, since
         // every text field is now treated as multiline-capable (for long
         // free-text fields) but that must not bypass comma formatting here.

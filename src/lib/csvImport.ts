@@ -1,6 +1,6 @@
 // Orchestrates a CSV commit: matches/creates subcontractors by name, then
 // reverse-maps each row (see csvReverseMap.ts) into subcontractor_grid_values
-// and contract_info_values — never field_values directly. Those are the
+// and contract_info_values - never field_values directly. Those are the
 // single source of truth the recompute pipeline (useMappingRecompute) computes
 // field_values from, so this import is just another way to fill in the grid
 // and Contract Info, not a parallel writer of PDF output.
@@ -52,7 +52,7 @@ export async function importCsvIntoProject(
       await api.bulkSetGridValues(sub.id, grid);
       fieldsSet += Object.keys(grid).length;
     }
-    // Contract Info is global, not per-row — the export duplicates the same
+    // Contract Info is global, not per-row - the export duplicates the same
     // answers on every row, so just merge them all, first value wins.
     for (const [key, value] of Object.entries(contractInfo)) {
       if (!(key in mergedContractInfo)) mergedContractInfo[key] = value;

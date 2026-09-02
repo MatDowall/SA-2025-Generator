@@ -176,7 +176,7 @@ export const PdfViewer = forwardRef<PdfViewerHandle, PdfViewerProps>(
           try {
             await task.promise;
           } catch {
-            /* render cancelled — expected when zoom changes mid-pass */
+            /* render cancelled - expected when zoom changes mid-pass */
           }
         }
       })();

@@ -1,7 +1,7 @@
 // CSV import. Reads a CSV whose first column identifies the subcontractor and
 // whose remaining columns are AcroForm field names. Parsing only happens
 // here (analyze_import_csv for the preview, parse_import_csv for the actual
-// commit) — the frontend's CSV reverse-map (src/lib/csvReverseMap.ts) does
+// commit) - the frontend's CSV reverse-map (src/lib/csvReverseMap.ts) does
 // subcontractor matching/creation and writes into subcontractor_grid_values /
 // contract_info_values, since those are now the single source of truth
 // field_values is computed from (see useMappingRecompute). This file no
@@ -122,18 +122,18 @@ pub struct ParsedCsv {
     pub rows: Vec<Vec<String>>,
 }
 
-/// Parses the CSV into raw {columns, rows} with no DB writes at all — the
+/// Parses the CSV into raw {columns, rows} with no DB writes at all - the
 /// frontend's CSV reverse-map (see src/lib/csvReverseMap.ts) does the actual
 /// subcontractor matching/creation and reverse-mapped writes into
 /// subcontractor_grid_values / contract_info_values, since the grid + Contract
 /// Info are now the single source of truth field_values is computed from
-/// (see useMappingRecompute) — CSV import is just another way to fill those
+/// (see useMappingRecompute) - CSV import is just another way to fill those
 /// in, not a parallel writer of field_values.
 #[tauri::command]
 pub fn parse_import_csv(path: String) -> Result<ParsedCsv, String> {
     let records = read_records(&path)?;
     let header_idx = find_header(&records).ok_or_else(|| {
-        format!("No \"{ID_COLUMN}\" header column found — this doesn't look like a SA-2025 export.")
+        format!("No \"{ID_COLUMN}\" header column found - this doesn't look like a SA-2025 export.")
     })?;
     let columns: Vec<String> = records[header_idx].iter().map(|s| s.to_string()).collect();
     let rows: Vec<Vec<String>> = records[header_idx + 1..]

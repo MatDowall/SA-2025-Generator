@@ -23,7 +23,7 @@ export function AboutModal({ onClose }: { onClose: () => void }) {
       case "downloading":
         return `Downloading update… ${progress}%`;
       case "ready":
-        return "Update ready — restarting…";
+        return "Update ready - restarting…";
       case "error":
         return `Update check failed: ${error}`;
       default:

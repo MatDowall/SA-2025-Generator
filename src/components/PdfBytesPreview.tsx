@@ -3,7 +3,7 @@ import { pdfjsLib } from "../pdf";
 import "./PdfBytesPreview.css";
 
 // Renders in-memory PDF bytes (e.g. a generated Letter of Award) to canvases
-// using the app's already-configured pdf.js. Read-only preview — no form layer.
+// using the app's already-configured pdf.js. Read-only preview - no form layer.
 // `zoom` matches the app-wide zoom control (1 = 100%).
 export function PdfBytesPreview({
   bytes,
@@ -19,7 +19,7 @@ export function PdfBytesPreview({
     const container = containerRef.current;
     if (!container) return;
 
-    // pdf.js takes ownership of the buffer — hand it a fresh copy.
+    // pdf.js takes ownership of the buffer - hand it a fresh copy.
     const task = pdfjsLib.getDocument({ data: bytes.slice(0) });
 
     (async () => {

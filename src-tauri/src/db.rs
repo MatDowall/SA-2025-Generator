@@ -7,7 +7,7 @@ use std::sync::Mutex;
 pub struct Db(pub Mutex<Connection>);
 
 /// Initial schema. field_values is keyed by AcroForm field name (the template
-/// is the single source of truth — see resources/field-map.json).
+/// is the single source of truth - see resources/field-map.json).
 const SCHEMA: &str = r#"
 PRAGMA foreign_keys = ON;
 
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS tp_companies (
     standard_cost_code  TEXT,
     ordering            INTEGER NOT NULL DEFAULT 0,
     is_active           INTEGER,  -- NULL = not checked against the Companies Register yet, 1 = active, 0 = inactive
-    match_status        TEXT      -- NULL/'matched'/'ambiguous'/'not_found'/'error' — set by the register check flow
+    match_status        TEXT      -- NULL/'matched'/'ambiguous'/'not_found'/'error' - set by the register check flow
 );
 
 -- Generic global settings: company identity scalars and JSON-array reference
@@ -103,13 +103,24 @@ CREATE TABLE IF NOT EXISTS staff_directory (
     ordering  INTEGER NOT NULL DEFAULT 0
 );
 
+-- Per-subcontractor send/return audit trail. One row per subcontractor: when
+-- the Letter of Award was sent (a one-way document - no return) and when the
+-- Subcontract Agreement was sent and the signed copy came back, plus notes.
+CREATE TABLE IF NOT EXISTS subcontractor_audit (
+    subcontractor_id  INTEGER PRIMARY KEY REFERENCES subcontractors(id) ON DELETE CASCADE,
+    loa_sent_date      TEXT,   -- ISO date (YYYY-MM-DD)
+    sa_sent_date       TEXT,
+    sa_returned_date   TEXT,
+    notes              TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_grid_values_sub ON subcontractor_grid_values(subcontractor_id);
 CREATE INDEX IF NOT EXISTS idx_contract_info_project ON contract_info_values(project_id);
 CREATE INDEX IF NOT EXISTS idx_staff_role ON staff_directory(role);
 "#;
 
 /// Adds `column` to `table` if an earlier release created the table without
-/// it — `CREATE TABLE IF NOT EXISTS` in SCHEMA above only covers fresh installs.
+/// it - `CREATE TABLE IF NOT EXISTS` in SCHEMA above only covers fresh installs.
 fn ensure_column(conn: &Connection, table: &str, column: &str, decl: &str) -> rusqlite::Result<()> {
     let mut stmt = conn.prepare(&format!("PRAGMA table_info({table})"))?;
     let exists = stmt

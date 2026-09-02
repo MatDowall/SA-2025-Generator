@@ -1,16 +1,16 @@
 // Reverse-mapping from CSV columns (AcroForm field names, matching the
 // legacy "SA2025 Template" export) back into subcontractor_grid_values /
-// contract_info_values — the grid + Contract Info are the single source of
+// contract_info_values - the grid + Contract Info are the single source of
 // truth field_values is computed from (see useMappingRecompute), so CSV
 // import fills *those* in rather than writing field_values directly.
 //
 // Derived mechanically from mappingFormulas.ts: each of the 138 mapped
 // fields was classified by which exact formula shape it has (see the
-// analysis that produced this file) — only fields with an unambiguous,
+// analysis that produced this file) - only fields with an unambiguous,
 // lossless reverse mapping are listed. Fields the legacy formulas only ever
 // *derive* (XLOOKUPs, hardcoded constants, date-of-generation, "document
 // attached" checkboxes driven by a sibling field's non-emptiness, computed
-// subtotals) are intentionally absent — re-importing them would just be
+// subtotals) are intentionally absent - re-importing them would just be
 // reconstructing values the recompute pipeline already derives on its own.
 import { GRID_COLUMNS } from "./gridColumns";
 
@@ -34,7 +34,7 @@ export interface ReverseMapEntry {
 
 export const REVERSE_MAP: Record<string, ReverseMapEntry> = {
   // --- direct grid passthroughs ---
-  // Subcontractor_Reference (C_cost_code) is deliberately absent — it's now
+  // Subcontractor_Reference (C_cost_code) is deliberately absent - it's now
   // auto-built from Trade + Settings cost codes + Contract Info job number,
   // not a free-text answer to import.
   Trade_Desc: { kind: "grid-direct", target: "A_trade" },
@@ -121,7 +121,7 @@ export const REVERSE_MAP: Record<string, ReverseMapEntry> = {
   Invite_Tender_Date: { kind: "ci-direct", target: "itt_dated" },
   NTT_Qty: { kind: "ci-direct", target: "notice_to_tenderers_numbers" },
   // Both of these were just mirrors of the same Contract Info answer in the
-  // legacy workbook (per-row AK and global BD echoed the same B31 cell) —
+  // legacy workbook (per-row AK and global BD echoed the same B31 cell) -
   // either populates the same field; harmless if both are present.
   "8.2.3_Other": { kind: "ci-direct", target: "required_until_other" },
   Other: { kind: "ci-direct", target: "required_until_other" },
@@ -135,7 +135,7 @@ export const REVERSE_MAP: Record<string, ReverseMapEntry> = {
   // --- Contract Info boolean mirrors ("On"/"" -> "true"/"false") ---
   "Practical completion of Head Contract": { kind: "ci-bool-on", target: "required_until_pc_head_contract" },
   // Same underlying answer as Insurance_of_Contract_Works_by_Subcontractor above,
-  // just the legacy workbook's alternate "On" rendering of it — redundant but harmless.
+  // just the legacy workbook's alternate "On" rendering of it - redundant but harmless.
   "Completion of the Subcontract Works": { kind: "ci-bool-on", target: "ins_of_subcontract_works_by_sub" },
 
   // --- Contract Info values gated by a sibling boolean (skip if "N/A") ---
@@ -168,7 +168,7 @@ export const REVERSE_MAP: Record<string, ReverseMapEntry> = {
 };
 
 // Retentions (CG–CK in the legacy Template) have no independent AcroForm
-// field representing the grid's own "Retentions" checkbox — only their
+// field representing the grid's own "Retentions" checkbox - only their
 // already-gated downstream values are real PDF fields. So importing real
 // (non-"N/A") retention figures must also infer the gating checkbox.
 export const RETENTION_FIELD_TARGETS: Record<string, string> = {
@@ -192,9 +192,9 @@ export interface ReverseMappedRow {
  * can share one pair of accumulator objects (see applyCsvRow).
  *
  * `allowEmpty` distinguishes "this CSV column had no data for this row" (the
- * default — skip entirely, don't clobber an existing answer with nothing)
+ * default - skip entirely, don't clobber an existing answer with nothing)
  * from "the user deliberately cleared this field" (set by live PDF edits via
- * applyFieldEdit's caller in App.tsx) — in the latter case an empty value
+ * applyFieldEdit's caller in App.tsx) - in the latter case an empty value
  * must propagate as clearing the underlying grid/Contract Info value too,
  * otherwise the next recompute just re-pushes the still-stored old value
  * back into the PDF, making the deletion look like it didn't take.
@@ -249,7 +249,7 @@ export function applyFieldEdit(
       grid[RETENTION_GATE_GRID_KEY] = "true";
     } else if (allowEmpty && !value) {
       // Clearing a retention figure clears just that figure, not the
-      // "Retentions apply" gate — the other retention fields may still hold
+      // "Retentions apply" gate - the other retention fields may still hold
       // real values that should keep showing.
       grid[RETENTION_FIELD_TARGETS[fieldName]] = "";
     }
@@ -269,11 +269,11 @@ export function applyCsvRow(row: Record<string, string>): ReverseMappedRow {
 /**
  * PDF fields that mirror a Subcontractor Details grid column the user can
  * only set through a constrained control there (a dropdown, or the
- * Subcontractor name — which also drives the TP Companies lookup and
+ * Subcontractor name - which also drives the TP Companies lookup and
  * requires the proper rename flow, not a bare value write). Editing the
  * underlying answer for these must happen on the grid; the PDF overlay
  * renders them read-only instead of allowing a value that could disagree
- * with — or silently bypass — that constraint.
+ * with - or silently bypass - that constraint.
  */
 export const LOCKED_PDF_FIELDS: ReadonlySet<string> = new Set([
   ...Object.entries(REVERSE_MAP)
@@ -288,13 +288,13 @@ export const LOCKED_PDF_FIELDS: ReadonlySet<string> = new Set([
   // canonical "must edit via the grid" example, so it's added explicitly.
   "Subcontractor_Name",
   // Pure sums (SUBTOTAL(H,J,L), same as the grid's own Contract Value
-  // column) — editing these directly is always a no-op-that-looks-like-it-
+  // column) - editing these directly is always a no-op-that-looks-like-it-
   // worked: the typed value sits in field_values until some *other* mapped
   // field's edit happens to trigger a recompute, which then silently
   // overwrites it. Lock them so the real inputs (Original Tendered Price,
   // the two Add/Omit values) are what gets edited instead.
   "Subcontract_Value",
   "Total_Subcontract_Sum",
-  // Mirrors the grid's app-derived Code column (C_cost_code) — same reasoning.
+  // Mirrors the grid's app-derived Code column (C_cost_code) - same reasoning.
   "Subcontractor_Reference",
 ]);

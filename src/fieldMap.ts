@@ -35,7 +35,7 @@ export async function loadFieldMap(): Promise<FieldMap> {
   return cache;
 }
 
-/** Fields that actually carry data — pages 1..dataPageLimit only. */
+/** Fields that actually carry data - pages 1..dataPageLimit only. */
 export function dataFields(map: FieldMap): FieldDef[] {
   return map.fields.filter((f) => f.page != null && f.page <= map.dataPageLimit);
 }

@@ -31,7 +31,7 @@ pub struct TpCompany {
     pub standard_cost_code: Option<String>,
     #[serde(default)]
     pub ordering: i64,
-    // New column — defaulted so older seed files / cached payloads without it still parse.
+    // New column - defaulted so older seed files / cached payloads without it still parse.
     // NULL = not checked against the Companies Register yet, Some(1) = active, Some(0) = inactive.
     #[serde(default)]
     pub is_active: Option<i64>,
@@ -70,7 +70,7 @@ pub(crate) const SELECT_COLUMNS: &str = "id, company, legal_name_register, nzbn,
      address_1, address_2, address_3, city, zip, full_address, business_phone, \
      email, directors, trades, standard_cost_code, ordering, is_active, match_status";
 
-/// Loads a single row by id — used by the NZBN-match flow to merge API
+/// Loads a single row by id - used by the NZBN-match flow to merge API
 /// results into the existing record without clobbering fields the API
 /// doesn't supply (directors, trades, standard_cost_code, etc).
 pub(crate) fn get_company_by_id(conn: &rusqlite::Connection, id: i64) -> Result<TpCompany, String> {

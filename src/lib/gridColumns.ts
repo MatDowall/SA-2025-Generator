@@ -1,4 +1,4 @@
-// Column schema for the "Subcontractor Details" grid — ported verbatim
+// Column schema for the "Subcontractor Details" grid - ported verbatim
 // (headers, ordering, column letters A–BR) from the legacy workbook's
 // "Subcontractor Details" tab. column_key is the persistence key
 // (subcontractor_grid_values.column_key) and is prefixed with the original

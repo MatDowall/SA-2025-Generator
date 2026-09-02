@@ -1,6 +1,6 @@
 // Per-subcontractor "Subcontractor Details" grid columns. Separate namespace
 // from field_values since grid columns (e.g. "trade") are not AcroForm field
-// names — see subcontractor_grid_values in db.rs.
+// names - see subcontractor_grid_values in db.rs.
 use crate::db::Db;
 use rusqlite::params;
 use std::collections::HashMap;
@@ -57,7 +57,7 @@ pub fn set_grid_value(
     Ok(())
 }
 
-/// Bulk variant of set_grid_value — one transaction for many column_key/value
+/// Bulk variant of set_grid_value - one transaction for many column_key/value
 /// pairs at once (used by CSV reverse-import, which otherwise would be one
 /// IPC round-trip per cell).
 #[tauri::command]
@@ -87,7 +87,7 @@ pub fn bulk_set_grid_values(
 }
 
 /// Returns every subcontractor's grid values at once, keyed by subcontractor
-/// id — the grid renders every row simultaneously, so one bulk call avoids
+/// id - the grid renders every row simultaneously, so one bulk call avoids
 /// an IPC round-trip per row.
 #[tauri::command]
 pub fn get_grid_values_for_project(

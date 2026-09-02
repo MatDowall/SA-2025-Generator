@@ -1,5 +1,5 @@
 // Global app settings: company identity scalars, JSON-array reference lists,
-// and the PM/BTM/QS staff directories — replaces the legacy workbook's
+// and the PM/BTM/QS staff directories - replaces the legacy workbook's
 // hidden "Drop Down Lists" sheet. Seeded once on first run (see
 // seed_settings_if_empty in lib.rs) from resources/settings-seed.json.
 use crate::db::Db;
@@ -150,7 +150,7 @@ pub fn seed_settings_if_empty(conn: &rusqlite::Connection, seed_json: &str) -> r
         Ok(s) => s,
         Err(e) => {
             eprintln!("settings seed JSON parse failed: {e}");
-            return Ok(()); // malformed/missing seed file — leave settings empty
+            return Ok(()); // malformed/missing seed file - leave settings empty
         }
     };
     for (key, value) in seed.scalars {

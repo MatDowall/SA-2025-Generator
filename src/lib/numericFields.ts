@@ -1,5 +1,5 @@
 // Fields (by AcroForm field name) that hold a dollar amount or percentage and
-// should display thousands-separated with two decimal places — shared by the
+// should display thousands-separated with two decimal places - shared by the
 // live PDF overlay (FieldOverlay.tsx) and the PDF export fill (pdfFill.ts)
 // so the two stay in sync.
 export const NUMERIC_FIELD_NAMES = new Set([

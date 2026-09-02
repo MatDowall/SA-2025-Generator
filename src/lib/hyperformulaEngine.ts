@@ -1,6 +1,6 @@
 // A standalone HyperFormula engine (not Handsontable's built-in formulas
 // plugin) hosting "TPCompanies", "SubcontractorDetails", "ContractInfo",
-// "StaffQS", and a hidden "Mapping" sheet — the last one ports the legacy
+// "StaffQS", and a hidden "Mapping" sheet - the last one ports the legacy
 // workbook's "SA2025 Template" tab (see mappingFormulas.ts) to compute all
 // 154 PDF field values from Contract Info + Subcontractor Details + TP
 // Companies + the QS staff directory, exactly as the original did.
@@ -39,7 +39,7 @@ export function createEngine(): HyperFormula {
   // date-like strings (e.g. "24/06/2026") into date serial numbers. Every
   // date in this app is a plain typed/imported string copied straight
   // through to a PDF text field or compared with `>" "` for "is this
-  // populated" — never used in date arithmetic — so silently coercing it to
+  // populated" - never used in date arithmetic - so silently coercing it to
   // a number only breaks both: the PDF shows a raw serial instead of the
   // string, and a number is never ">" a string, so "is populated" checkbox
   // formulas evaluate false. Same family of surprise as the boolean
@@ -81,7 +81,7 @@ export interface ComputedRow {
  * Loads one row per subcontractor into the SubcontractorDetails sheet (col B
  * mirrors the subcontractor's name; D/E/M are formulas) and returns the
  * computed D/E/M values per subcontractor id for display in Handsontable
- * (which doesn't know about this engine — these are just read back as plain
+ * (which doesn't know about this engine - these are just read back as plain
  * strings and injected into the grid's read-only computed columns).
  */
 export function loadSubcontractorDetails(
@@ -110,7 +110,7 @@ export function loadSubcontractorDetails(
       const raw = values[col.key] ?? "";
       // Defensive: strip thousands-separator commas regardless of how they
       // got into the stored value (e.g. a numeric editor echoing its own
-      // display formatting back into source data) — a comma-containing
+      // display formatting back into source data) - a comma-containing
       // string silently fails numeric parsing (SUBTOTAL treats it as 0
       // rather than erroring), and this is the one function both the grid's
       // own engine and the recompute pipeline's separate engine share, so
@@ -201,7 +201,7 @@ export interface MappingSettings {
 
 /**
  * Builds the hidden Mapping sheet (one row per subcontractor, ported from
- * the legacy "SA2025 Template" tab — see mappingFormulas.ts) and reads back
+ * the legacy "SA2025 Template" tab - see mappingFormulas.ts) and reads back
  * every column's computed value, keyed by subcontractor id then AcroForm
  * field name. This is what ultimately gets pushed into `field_values`.
  */

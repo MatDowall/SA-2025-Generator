@@ -2,7 +2,7 @@
 // New Zealand companies by name from the TP Companies directory.
 //
 // This is deliberately NOT the Companies Register API's "get company by
-// name" operation that was originally suggested — that operation needs a
+// name" operation that was originally suggested - that operation needs a
 // three-legged OAuth consent flow (a register user granting access) on top
 // of a subscription key, and reading the portal it appears to be a
 // name-availability check for incorporation rather than a public record
@@ -11,17 +11,17 @@
 // address, NZBN, directors) from just a subscription key.
 //
 // Field names below are verified against the real OpenAPI spec (NZBN v5,
-// downloaded from the developer portal once subscribed — operations
+// downloaded from the developer portal once subscribed - operations
 // EntitiesGet, EntitiesByNzbnGet, EntitiesRolesByNzbnGet). Notable shapes:
 // - Search (`GET /entities`) returns `{ items: [{ entityName, nzbn,
 //   entityStatusCode, entityStatusDescription, ... }] }`.
 // - Detail (`GET /entities/{nzbn}`) wraps addresses as
 //   `{ links, addressList: [{ address1..address4, postCode, addressType }] }`
-//   — there is no separate city field, just address1-4 + postCode.
+//   - there is no separate city field, just address1-4 + postCode.
 // - `entityStatusCode`/`entityStatusDescription` values (per the `entity-status`
 //   search filter doc): Registered, VoluntaryAdministration, InReceivership,
 //   InLiquidation, InStatutoryAdministration, Inactive, RemovedClosed.
-// - Directors come from a dedicated `GET /entities/{nzbn}/roles` endpoint —
+// - Directors come from a dedicated `GET /entities/{nzbn}/roles` endpoint -
 //   a flat array of `{ roleType, roleStatus, rolePerson: { firstName,
 //   middleNames, lastName, title } }`; `roleType` is the literal string
 //   "Director" for directors (also: Person Authorised for Service, Sole
@@ -122,7 +122,7 @@ pub async fn search_nzbn_companies(
 
 /// "Registered" is the only entityStatusCode/Description meaning the company
 /// is in good standing; everything else (Inactive, RemovedClosed, or one of
-/// the distress states — VoluntaryAdministration, InReceivership,
+/// the distress states - VoluntaryAdministration, InReceivership,
 /// InLiquidation, InStatutoryAdministration) is surfaced as inactive since
 /// none of those are a status you'd want to sign a new subcontract against.
 fn derive_is_active(status: &Option<String>) -> Option<i64> {
@@ -161,7 +161,7 @@ fn person_name(p: &Value) -> Option<String> {
 }
 
 /// `addressType` is REGISTERED, POSTAL, SERVICE, OFFICE, DELIVERY, INVOICE,
-/// RECORDS, SHAREREGISTER, or ALL (per the AddressType enum) — prefer the
+/// RECORDS, SHAREREGISTER, or ALL (per the AddressType enum) - prefer the
 /// registered office address, falling back to whatever's first.
 fn pick_address(detail: &Value) -> Option<(Option<String>, Option<String>, Option<String>, Option<String>)> {
     let list = detail.get("addresses")?.get("addressList")?.as_array()?;
@@ -229,7 +229,7 @@ async fn fetch_entity_detail(env: &str, key: &str, nzbn: &str) -> Result<EntityD
                 Some(names.join("; "))
             }
         }
-        // Sole traders/partnerships/trusts may not expose a roles list at all —
+        // Sole traders/partnerships/trusts may not expose a roles list at all -
         // that's not a reason to fail the whole match, just leave directors as-is.
         Err(_) => None,
     };
@@ -352,7 +352,7 @@ pub struct BulkCheckResult {
     pub company: String,
     /// "matched" | "ambiguous" | "not_found" | "error"
     pub outcome: String,
-    /// Populated only for "ambiguous" — lets the frontend reopen the picker
+    /// Populated only for "ambiguous" - lets the frontend reopen the picker
     /// without a second round-trip search.
     pub candidates: Vec<NzbnSearchResult>,
     pub message: Option<String>,
@@ -371,7 +371,7 @@ pub async fn bulk_check_tp_companies(state: State<'_, Db>) -> Result<Vec<BulkChe
 
     for company in companies {
         // Search by the Companies Register legal name (column D), not the
-        // trading name in `company` (column A) — the legal name is what
+        // trading name in `company` (column A) - the legal name is what
         // actually matches NZBN register records.
         let search_name = company
             .legal_name_register

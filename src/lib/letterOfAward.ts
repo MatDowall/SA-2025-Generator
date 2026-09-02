@@ -1,4 +1,4 @@
-// Letter of Award — value resolution and the editable body template.
+// Letter of Award - value resolution and the editable body template.
 //
 // One letter per subcontractor. Merge values are drawn from the same data that
 // drives the Subcontract Agreements: the subcontractor list, the Subcontractor
@@ -10,7 +10,7 @@ import type {
   StaffMember,
 } from "../api";
 
-/** Placeholders the editable body may contain. `{{Signature}}` is special —
+/** Placeholders the editable body may contain. `{{Signature}}` is special -
  *  the PDF renderer replaces it with the QS's signature image, not text. */
 export const LOA_PLACEHOLDERS = [
   { token: "{{Date}}", label: "Letter date" },

@@ -34,12 +34,16 @@ export function LetterOfAwardView({
   activeSubId,
   onSelect,
   zoom,
+  onEmailed,
 }: {
   project: Project | null;
   subs: Subcontractor[];
   activeSubId: number | null;
   onSelect: (id: number) => void;
   zoom: number;
+  /** Called after an email draft is opened, so the app can offer to log the
+   *  letter as sent in the subcontractor's audit trail. */
+  onEmailed?: (sub: Subcontractor) => void;
 }) {
   const [data, setData] = useState<ProjectData | null>(null);
   const [grid, setGrid] = useState<Record<string, string> | null>(null);
@@ -213,6 +217,7 @@ export function LetterOfAwardView({
         pdfBytes: bytes,
       });
       setExportMsg(to ? `Draft opened for ${to}` : "Draft opened (no email on file)");
+      onEmailed?.(activeSub);
     } catch (e) {
       setExportMsg(`Email failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {

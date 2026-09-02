@@ -17,7 +17,7 @@ export interface BulkCheckResultsModalProps {
 }
 
 // Shown after a bulk Companies Register check. `results` is pre-filtered to
-// only the rows that need attention (ambiguous/not_found/error) — clean
+// only the rows that need attention (ambiguous/not_found/error) - clean
 // exact matches were already applied silently, `matchedCount` just reports
 // how many.
 export function BulkCheckResultsModal({

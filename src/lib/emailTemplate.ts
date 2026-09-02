@@ -8,7 +8,7 @@ export const EMAIL_SUBJECT_KEY = "email_subject_template";
 export const EMAIL_BODY_KEY = "email_body_template";
 
 export const DEFAULT_EMAIL_SUBJECT =
-  "{{Project_Number}} {{Project_Name}} — {{Document}} — {{Subcontractor}}";
+  "{{Project_Number}} {{Project_Name}} - {{Document}} - {{Subcontractor}}";
 
 export const DEFAULT_EMAIL_BODY =
   "Hi,\n\n" +

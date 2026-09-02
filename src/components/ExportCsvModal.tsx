@@ -74,7 +74,7 @@ export function ExportCsvModal({
 
   return (
     <Modal
-      title="Export CSV — choose columns"
+      title="Export CSV - choose columns"
       onClose={onClose}
       width={560}
       secondaryActions={[

@@ -66,7 +66,7 @@ export function UpdateBanner() {
         </>
       )}
       {state === "downloading" && <div>Downloading update… {progress}%</div>}
-      {state === "ready" && <div>Update ready — restarting…</div>}
+      {state === "ready" && <div>Update ready - restarting…</div>}
       {state === "error" && (
         <div style={{ color: "var(--danger)" }}>Update check failed. Try again later.</div>
       )}

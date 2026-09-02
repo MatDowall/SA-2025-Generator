@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import "./ImportProgressOverlay.css";
 
 // A deliberately non-dismissible overlay (no close button, no backdrop
-// click, no Escape) — CSV import can take several seconds for 20+
+// click, no Escape) - CSV import can take several seconds for 20+
 // subcontractors (each row is multiple sequential IPC round-trips), and
 // without this the app just looked frozen while still accepting clicks,
 // which could interleave with the in-flight import and corrupt state.
