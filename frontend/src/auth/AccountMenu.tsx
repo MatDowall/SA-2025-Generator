@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { logout, type AuthUser } from "./authApi";
 import { UsersModal } from "./UsersModal";
+import { ChangePasswordModal } from "./ChangePasswordModal";
 
 // A small floating account control overlaid on the (unchanged) app, top-right.
 // Shows who's signed in, opens the Users admin (admins only), and logs out.
 export function AccountMenu({ user, onLoggedOut }: { user: AuthUser; onLoggedOut: () => void }) {
   const [open, setOpen] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  const [showChangePw, setShowChangePw] = useState(false);
 
   const doLogout = async () => {
     await logout();
@@ -39,6 +41,15 @@ export function AccountMenu({ user, onLoggedOut }: { user: AuthUser; onLoggedOut
                 Manage users
               </button>
             )}
+            <button
+              style={item}
+              onClick={() => {
+                setShowChangePw(true);
+                setOpen(false);
+              }}
+            >
+              Change password
+            </button>
             <button style={item} onClick={doLogout}>
               Log out
             </button>
@@ -46,6 +57,7 @@ export function AccountMenu({ user, onLoggedOut }: { user: AuthUser; onLoggedOut
         )}
       </div>
       {showUsers && <UsersModal currentUserId={user.id} onClose={() => setShowUsers(false)} />}
+      {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
     </>
   );
 }

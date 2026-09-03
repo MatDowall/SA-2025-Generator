@@ -107,9 +107,13 @@ pub fn api_router() -> Router<AppState> {
         .route("/api/analyze_import_csv", post(analyze_import_csv))
         .route("/api/parse_import_csv", post(parse_import_csv))
         .route("/api/import_project_file", post(import_project_file))
+        // self-service password change (any signed-in user)
+        .route("/api/change_password", post(auth::change_password))
         // user management (admin-only; enforced inside the handlers)
         .route("/api/list_users", post(auth::list_users))
+        .route("/api/list_auth_events", post(auth::list_auth_events))
         .route("/api/create_user", post(auth::create_user))
+        .route("/api/create_reset_link", post(auth::create_reset_link))
         .route("/api/delete_user", post(auth::delete_user))
         .route("/api/cleanup_database", post(auth::cleanup_database))
         // Any other /api/* path is a real 404 (JSON), never the SPA shell.

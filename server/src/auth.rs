@@ -19,6 +19,18 @@ use serde::{Deserialize, Serialize};
 
 const COOKIE_NAME: &str = "sa2025_session";
 const SESSION_DAYS: i64 = 30;
+/// How long an invite link stays valid before the admin must re-issue it.
+const INVITE_HOURS: i64 = 72;
+/// Reset links are shorter-lived than invites (they target an active account).
+const RESET_HOURS: i64 = 24;
+/// Minimum password length. Length beats composition rules (current NIST guidance).
+const MIN_PASSWORD_LEN: usize = 12;
+/// Login rate-limiting: this many consecutive failed logins within the rolling
+/// window locks the account for the cooldown period.
+const MAX_FAILED_ATTEMPTS: i64 = 5;
+const LOCKOUT_MINUTES: i64 = 15;
+/// A failure older than this resets the running count (rolling window).
+const ATTEMPT_WINDOW_MINUTES: i64 = 15;
 
 type ApiError = (StatusCode, String);
 
@@ -53,6 +65,71 @@ fn verify_password(password: &str, hash: &str) -> bool {
         .is_ok()
 }
 
+/// Shared password policy (reused by activation now, change-password later).
+fn validate_password(password: &str) -> Result<(), ApiError> {
+    if password.len() < MIN_PASSWORD_LEN {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Password must be at least {MIN_PASSWORD_LEN} characters."),
+        ));
+    }
+    Ok(())
+}
+
+// ---- login rate-limiting (per-account lockout) ----
+
+/// Records a failed login. Uses a rolling window: a failure older than the
+/// window resets the count. Returns true if this failure just locked the
+/// account (reached the threshold).
+fn register_failed_login(conn: &Connection, user_id: i64) -> Result<bool, String> {
+    conn.execute(
+        &format!(
+            "UPDATE users SET \
+               failed_attempts = CASE \
+                 WHEN last_failed_at IS NULL \
+                   OR last_failed_at <= datetime('now', '-{ATTEMPT_WINDOW_MINUTES} minutes') THEN 1 \
+                 ELSE failed_attempts + 1 END, \
+               last_failed_at = datetime('now') \
+             WHERE id = ?1"
+        ),
+        params![user_id],
+    )
+    .map_err(|e| e.to_string())?;
+    let attempts: i64 = conn
+        .query_row(
+            "SELECT failed_attempts FROM users WHERE id = ?1",
+            params![user_id],
+            |r| r.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    if attempts >= MAX_FAILED_ATTEMPTS {
+        // Lock, and reset the counter so a fresh set of attempts is available
+        // once the cooldown elapses.
+        conn.execute(
+            &format!(
+                "UPDATE users SET locked_until = datetime('now', '+{LOCKOUT_MINUTES} minutes'), \
+                 failed_attempts = 0 WHERE id = ?1"
+            ),
+            params![user_id],
+        )
+        .map_err(|e| e.to_string())?;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+/// Clears any failure count / lock after a successful auth (login, or a password
+/// set via activation).
+fn clear_login_failures(conn: &Connection, user_id: i64) -> Result<(), String> {
+    conn.execute(
+        "UPDATE users SET failed_attempts = 0, last_failed_at = NULL, locked_until = NULL \
+         WHERE id = ?1",
+        params![user_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 // ---- sessions ----
 
 fn gen_token() -> String {
@@ -70,6 +147,72 @@ fn create_session(conn: &Connection, user_id: i64) -> Result<String, String> {
     )
     .map_err(|e| e.to_string())?;
     Ok(token)
+}
+
+// ---- invite / reset tokens ----
+
+/// sha256 of the raw token, hex-encoded. Only this is stored, so a DB read
+/// alone can't be replayed to set a password.
+fn token_hash(raw: &str) -> String {
+    use sha2::{Digest, Sha256};
+    Sha256::digest(raw.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+/// Inserts a fresh single-use token and returns the RAW token (shown once,
+/// never persisted).
+fn mint_token(conn: &Connection, user_id: i64, purpose: &str, hours: i64) -> Result<String, String> {
+    let raw = gen_token();
+    conn.execute(
+        "INSERT INTO user_tokens (token_hash, user_id, purpose, expires_at) \
+         VALUES (?1, ?2, ?3, datetime('now', ?4))",
+        params![token_hash(&raw), user_id, purpose, format!("+{hours} hours")],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(raw)
+}
+
+/// Resolves a live (unused, unexpired) password-setup token — invite OR reset,
+/// which share the same "set a password" activation flow — to its
+/// (user_id, email, purpose), or None if it's missing/spent/expired.
+fn lookup_setup_token(
+    conn: &Connection,
+    raw: &str,
+) -> Result<Option<(i64, String, String)>, String> {
+    conn.query_row(
+        "SELECT u.id, u.email, t.purpose FROM user_tokens t JOIN users u ON u.id = t.user_id \
+         WHERE t.token_hash = ?1 AND t.purpose IN ('invite','reset') \
+           AND t.used_at IS NULL AND t.expires_at > datetime('now')",
+        params![token_hash(raw)],
+        |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+    )
+    .optional()
+    .map_err(|e| e.to_string())
+}
+
+// ---- security audit trail ----
+
+/// Records an account-security event. Best-effort: a logging failure is warned
+/// about but never fails the operation it's auditing.
+fn log_auth_event(
+    conn: &Connection,
+    event: &str,
+    target_user_id: Option<i64>,
+    target_email: &str,
+    actor_user_id: Option<i64>,
+    actor_email: Option<&str>,
+    detail: Option<&str>,
+) {
+    if let Err(e) = conn.execute(
+        "INSERT INTO auth_events \
+           (event, target_user_id, target_email, actor_user_id, actor_email, detail) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        params![event, target_user_id, target_email, actor_user_id, actor_email, detail],
+    ) {
+        tracing::warn!("auth_events insert failed ({event}): {e}");
+    }
 }
 
 fn user_for_token(conn: &Connection, token: &str) -> Result<Option<User>, String> {
@@ -157,6 +300,8 @@ pub fn auth_router() -> Router<AppState> {
         .route("/api/auth/login", post(login))
         .route("/api/auth/logout", post(logout))
         .route("/api/auth/me", get(me))
+        .route("/api/auth/token_info", post(token_info))
+        .route("/api/auth/activate", post(activate))
 }
 
 #[derive(Deserialize)]
@@ -168,23 +313,50 @@ struct LoginArgs {
 async fn login(State(s): State<AppState>, Json(a): Json<LoginArgs>) -> Result<Response, ApiError> {
     let conn = s.pool.get().map_err(infra)?;
     let email = a.email.trim();
-    let row: Option<(i64, String, Option<String>, String, String)> = conn
+    // `lock_mins` is Some(remaining minutes) while the account is locked, else None.
+    let row: Option<(i64, String, Option<String>, String, String, Option<i64>)> = conn
         .query_row(
-            "SELECT id, email, password_hash, display_name, role \
+            "SELECT id, email, password_hash, display_name, role, \
+               CASE WHEN locked_until IS NOT NULL AND locked_until > datetime('now') \
+                    THEN CAST((julianday(locked_until) - julianday('now')) * 1440 AS INTEGER) + 1 \
+                    ELSE NULL END \
              FROM users WHERE email = ?1 COLLATE NOCASE",
             params![email],
-            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?)),
         )
         .optional()
         .map_err(infra)?;
 
     let unauthorized = || (StatusCode::UNAUTHORIZED, "Invalid email or password.".to_string());
-    let (id, email, hash, display_name, role) = row.ok_or_else(unauthorized)?;
-    let hash = hash.ok_or_else(unauthorized)?; // SSO-only account: no password
-    if !verify_password(&a.password, &hash) {
+    let (id, email, hash, display_name, role, lock_mins) = row.ok_or_else(unauthorized)?;
+
+    // Refuse a locked account before even checking the password.
+    if let Some(mins) = lock_mins {
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            format!("Too many failed attempts. Try again in about {mins} minute(s)."),
+        ));
+    }
+
+    // A null hash (invited/not-yet-activated) counts as a failed verification.
+    let ok = match &hash {
+        Some(h) => verify_password(&a.password, h),
+        None => false,
+    };
+    if !ok {
+        let locked = register_failed_login(&conn, id).map_err(infra)?;
+        if locked {
+            // System-initiated lockout (no actor).
+            log_auth_event(&conn, "account_locked", Some(id), &email, None, None, None);
+            return Err((
+                StatusCode::TOO_MANY_REQUESTS,
+                format!("Too many failed attempts. This account is locked for {LOCKOUT_MINUTES} minutes."),
+            ));
+        }
         return Err(unauthorized());
     }
 
+    clear_login_failures(&conn, id).map_err(infra)?;
     let token = create_session(&conn, id).map_err(infra)?;
     let user = User {
         id,
@@ -192,13 +364,19 @@ async fn login(State(s): State<AppState>, Json(a): Json<LoginArgs>) -> Result<Re
         display_name,
         role,
     };
-    let body = serde_json::to_string(&user).map_err(infra)?;
+    session_response(&user, &token, s.cookie_secure)
+}
+
+/// Builds a JSON `User` body with a fresh session cookie attached. Shared by the
+/// login and activation paths so both land the caller signed in identically.
+fn session_response(user: &User, token: &str, secure: bool) -> Result<Response, ApiError> {
+    let body = serde_json::to_string(user).map_err(infra)?;
     let mut resp = Response::new(Body::from(body));
     resp.headers_mut()
         .insert(header::CONTENT_TYPE, HeaderValue::from_static("application/json"));
     resp.headers_mut().insert(
         header::SET_COOKIE,
-        HeaderValue::from_str(&session_cookie(&token, s.cookie_secure)).map_err(infra)?,
+        HeaderValue::from_str(&session_cookie(token, secure)).map_err(infra)?,
     );
     Ok(resp)
 }
@@ -225,6 +403,177 @@ async fn me(State(s): State<AppState>, headers: HeaderMap) -> Result<Json<User>,
         Some(u) => Ok(Json(u)),
         None => Err(StatusCode::UNAUTHORIZED),
     }
+}
+
+// ---- self-service activation (public; invite-link flow) ----
+
+#[derive(Deserialize)]
+struct TokenArgs {
+    token: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TokenInfo {
+    email: String,
+}
+
+/// Generic error for a token that's missing, already used, or expired. Kept
+/// deliberately vague (410) so it can't be used to probe for accounts.
+fn dead_token() -> ApiError {
+    (
+        StatusCode::GONE,
+        "This link has expired or has already been used. Ask an admin for a new invite.".to_string(),
+    )
+}
+
+/// Validates an invite token and returns the target email so the activation
+/// page can show whose account is being set up. Does not consume the token.
+async fn token_info(
+    State(s): State<AppState>,
+    Json(a): Json<TokenArgs>,
+) -> Result<Json<TokenInfo>, ApiError> {
+    let conn = s.pool.get().map_err(infra)?;
+    let (_id, email, _purpose) = lookup_setup_token(&conn, &a.token)
+        .map_err(infra)?
+        .ok_or_else(dead_token)?;
+    Ok(Json(TokenInfo { email }))
+}
+
+#[derive(Deserialize)]
+struct ActivateArgs {
+    token: String,
+    password: String,
+}
+
+/// Consumes an invite token: sets the user's password, marks the token used,
+/// invalidates any other outstanding invites for that user, and signs them in.
+async fn activate(
+    State(s): State<AppState>,
+    Json(a): Json<ActivateArgs>,
+) -> Result<Response, ApiError> {
+    validate_password(&a.password)?;
+    let mut conn = s.pool.get().map_err(infra)?;
+
+    // Validate + consume atomically so a token can't be replayed by concurrent
+    // requests.
+    let tx = conn.transaction().map_err(infra)?;
+    let (user_id, _email, purpose) = lookup_setup_token(&tx, &a.token)
+        .map_err(infra)?
+        .ok_or_else(dead_token)?;
+    let hash = hash_password(&a.password).map_err(infra)?;
+    // Setting a password also clears any failed-login lockout on the account.
+    tx.execute(
+        "UPDATE users SET password_hash = ?1, failed_attempts = 0, \
+         last_failed_at = NULL, locked_until = NULL WHERE id = ?2",
+        params![hash, user_id],
+    )
+    .map_err(infra)?;
+    // Burn every outstanding setup token for this user (invite or reset — the one
+    // just used and any superseded ones), so none can be reused.
+    tx.execute(
+        "UPDATE user_tokens SET used_at = datetime('now') \
+         WHERE user_id = ?1 AND purpose IN ('invite','reset') AND used_at IS NULL",
+        params![user_id],
+    )
+    .map_err(infra)?;
+    tx.commit().map_err(infra)?;
+
+    // Load the now-activated user and sign them in.
+    let user = conn
+        .query_row(
+            "SELECT id, email, display_name, role FROM users WHERE id = ?1",
+            params![user_id],
+            |r| {
+                Ok(User {
+                    id: r.get(0)?,
+                    email: r.get(1)?,
+                    display_name: r.get(2)?,
+                    role: r.get(3)?,
+                })
+            },
+        )
+        .map_err(infra)?;
+    // The user activated their own account (self-actor); note which link type.
+    log_auth_event(
+        &conn,
+        "activated",
+        Some(user.id),
+        &user.email,
+        Some(user.id),
+        Some(&user.email),
+        Some(&purpose),
+    );
+    let session = create_session(&conn, user_id).map_err(infra)?;
+    session_response(&user, &session, s.cookie_secure)
+}
+
+// ---- self-service change password (protected; any signed-in user) ----
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ChangePasswordArgs {
+    current_password: String,
+    new_password: String,
+}
+
+/// Lets a signed-in user rotate their own password. Requires the current
+/// password, enforces the shared policy, then invalidates every *other* session
+/// for that user (keeping the caller's own) so a stolen cookie elsewhere dies.
+pub async fn change_password(
+    State(s): State<AppState>,
+    Extension(me): Extension<User>,
+    headers: HeaderMap,
+    Json(a): Json<ChangePasswordArgs>,
+) -> Result<Json<()>, ApiError> {
+    validate_password(&a.new_password)?;
+    if a.new_password == a.current_password {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "New password must be different from the current one.".to_string(),
+        ));
+    }
+    let conn = s.pool.get().map_err(infra)?;
+
+    // Verify the current password against the stored hash.
+    let hash: Option<String> = conn
+        .query_row(
+            "SELECT password_hash FROM users WHERE id = ?1",
+            params![me.id],
+            |r| r.get(0),
+        )
+        .map_err(infra)?;
+    let wrong = || (StatusCode::BAD_REQUEST, "Current password is incorrect.".to_string());
+    let hash = hash.ok_or_else(wrong)?; // no password set (shouldn't happen for a live session)
+    if !verify_password(&a.current_password, &hash) {
+        return Err(wrong());
+    }
+
+    let new_hash = hash_password(&a.new_password).map_err(infra)?;
+    conn.execute(
+        "UPDATE users SET password_hash = ?1 WHERE id = ?2",
+        params![new_hash, me.id],
+    )
+    .map_err(infra)?;
+
+    // Drop every other session for this user; keep the one making this request.
+    if let Some(current) = cookie_from_headers(&headers, COOKIE_NAME) {
+        conn.execute(
+            "DELETE FROM sessions WHERE user_id = ?1 AND token != ?2",
+            params![me.id, current],
+        )
+        .map_err(infra)?;
+    }
+    log_auth_event(
+        &conn,
+        "password_changed",
+        Some(me.id),
+        &me.email,
+        Some(me.id),
+        Some(&me.email),
+        None,
+    );
+    Ok(Json(()))
 }
 
 // ---- admin-only user management (mounted on the protected router) ----
@@ -275,20 +624,71 @@ pub async fn list_users(
     Ok(Json(rows))
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct AuthEventRow {
+    id: i64,
+    created_at: String,
+    event: String,
+    target_email: Option<String>,
+    actor_email: Option<String>,
+    detail: Option<String>,
+}
+
+/// Admin-only: the most recent account-security events, newest first.
+pub async fn list_auth_events(
+    State(s): State<AppState>,
+    Extension(me): Extension<User>,
+) -> Result<Json<Vec<AuthEventRow>>, ApiError> {
+    require_admin(&me)?;
+    let conn = s.pool.get().map_err(infra)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, created_at, event, target_email, actor_email, detail \
+             FROM auth_events ORDER BY id DESC LIMIT 200",
+        )
+        .map_err(infra)?;
+    let rows = stmt
+        .query_map([], |r| {
+            Ok(AuthEventRow {
+                id: r.get(0)?,
+                created_at: r.get(1)?,
+                event: r.get(2)?,
+                target_email: r.get(3)?,
+                actor_email: r.get(4)?,
+                detail: r.get(5)?,
+            })
+        })
+        .map_err(infra)?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(infra)?;
+    Ok(Json(rows))
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CreateUserArgs {
     email: String,
-    password: String,
     display_name: String,
     role: String,
+}
+
+/// The created account plus a one-time invite token. The raw token is returned
+/// exactly once (never stored in plaintext); the admin composes an
+/// `/activate#<token>` link from it and hands it to the new user.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct CreatedUser {
+    user: UserRow,
+    invite_token: String,
+    expires_hours: i64,
 }
 
 pub async fn create_user(
     State(s): State<AppState>,
     Extension(me): Extension<User>,
     Json(a): Json<CreateUserArgs>,
-) -> Result<Json<UserRow>, ApiError> {
+) -> Result<Json<CreatedUser>, ApiError> {
     require_admin(&me)?;
     let bad = |m: &str| (StatusCode::BAD_REQUEST, m.to_string());
     let email = a.email.trim().to_string();
@@ -299,17 +699,16 @@ pub async fn create_user(
     if display_name.is_empty() {
         return Err(bad("A display name is required."));
     }
-    if a.password.len() < 8 {
-        return Err(bad("Password must be at least 8 characters."));
-    }
     if a.role != "admin" && a.role != "member" {
         return Err(bad("Role must be 'admin' or 'member'."));
     }
-    let hash = hash_password(&a.password).map_err(infra)?;
-    let conn = s.pool.get().map_err(infra)?;
-    conn.execute(
-        "INSERT INTO users (email, password_hash, display_name, role) VALUES (?1, ?2, ?3, ?4)",
-        params![email, hash, display_name, a.role],
+    // The account starts with no password (NULL hash); the invitee sets it via
+    // the activation link. Login already rejects a null-hash account.
+    let mut conn = s.pool.get().map_err(infra)?;
+    let tx = conn.transaction().map_err(infra)?;
+    tx.execute(
+        "INSERT INTO users (email, password_hash, display_name, role) VALUES (?1, NULL, ?2, ?3)",
+        params![email, display_name, a.role],
     )
     .map_err(|e| {
         if e.to_string().contains("UNIQUE") {
@@ -318,16 +717,77 @@ pub async fn create_user(
             infra(e)
         }
     })?;
-    let id = conn.last_insert_rowid();
-    let created_at: String = conn
+    let id = tx.last_insert_rowid();
+    let created_at: String = tx
         .query_row("SELECT created_at FROM users WHERE id = ?1", params![id], |r| r.get(0))
         .map_err(infra)?;
-    Ok(Json(UserRow {
-        id,
+    let invite_token = mint_token(&tx, id, "invite", INVITE_HOURS).map_err(infra)?;
+    tx.commit().map_err(infra)?;
+    log_auth_event(
+        &conn,
+        "invite_created",
+        Some(id),
+        &email,
+        Some(me.id),
+        Some(&me.email),
+        None,
+    );
+    Ok(Json(CreatedUser {
+        user: UserRow {
+            id,
+            email,
+            display_name,
+            role: a.role,
+            created_at,
+        },
+        invite_token,
+        expires_hours: INVITE_HOURS,
+    }))
+}
+
+#[derive(Deserialize)]
+pub(crate) struct UserIdArgs {
+    id: i64,
+}
+
+/// A one-time reset link's raw token + TTL, returned once for the admin to hand
+/// to the user (same `/activate#<token>` flow as an invite).
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ResetLink {
+    token: String,
+    expires_hours: i64,
+    email: String,
+}
+
+/// Admin-only: mint a fresh reset token for an existing user. Does not touch the
+/// current password — the user sets a new one when they open the link.
+pub async fn create_reset_link(
+    State(s): State<AppState>,
+    Extension(me): Extension<User>,
+    Json(a): Json<UserIdArgs>,
+) -> Result<Json<ResetLink>, ApiError> {
+    require_admin(&me)?;
+    let conn = s.pool.get().map_err(infra)?;
+    let email: Option<String> = conn
+        .query_row("SELECT email FROM users WHERE id = ?1", params![a.id], |r| r.get(0))
+        .optional()
+        .map_err(infra)?;
+    let email = email.ok_or((StatusCode::NOT_FOUND, "No such user.".to_string()))?;
+    let token = mint_token(&conn, a.id, "reset", RESET_HOURS).map_err(infra)?;
+    log_auth_event(
+        &conn,
+        "reset_created",
+        Some(a.id),
+        &email,
+        Some(me.id),
+        Some(&me.email),
+        None,
+    );
+    Ok(Json(ResetLink {
+        token,
+        expires_hours: RESET_HOURS,
         email,
-        display_name,
-        role: a.role,
-        created_at,
     }))
 }
 

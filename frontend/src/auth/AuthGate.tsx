@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { fetchMe, type AuthUser } from "./authApi";
 import { Login } from "./Login";
+import { Activate } from "./Activate";
 import { AccountMenu } from "./AccountMenu";
 
 // Wraps the (unchanged) app: gates it behind sign-in, and overlays the account
@@ -40,6 +41,22 @@ export function AuthGate({ children }: { children: ReactNode }) {
     window.addEventListener("sa2025:unauthorized", onUnauthorized);
     return () => window.removeEventListener("sa2025:unauthorized", onUnauthorized);
   }, []);
+
+  // Invite-link landing: reachable while logged out, and it sets up a fresh
+  // session on success. Checked before the session gate so an invitee isn't
+  // bounced to the login screen. The SPA fallback already serves index.html
+  // for /activate, so no server route is needed.
+  if (window.location.pathname === "/activate") {
+    return (
+      <Activate
+        onSuccess={(u) => {
+          window.history.replaceState({}, "", "/"); // strip the token from the URL
+          setUser(u);
+          setStatus("in");
+        }}
+      />
+    );
+  }
 
   if (status === "loading") {
     return (
