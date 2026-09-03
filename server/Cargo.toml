@@ -27,6 +27,8 @@ csv = "1"
 encoding_rs = "0.8"
 
 # Auth: argon2 password hashing; rand_core/getrandom supplies OsRng for salts
-# and session tokens.
+# and session tokens. sha2 hashes the high-entropy invite/reset tokens at rest
+# (fast hash is correct for 256-bit random tokens; argon2 is only for passwords).
 argon2 = "0.5"
 rand_core = { version = "0.6", features = ["getrandom"] }
+sha2 = "0.10"

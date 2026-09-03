@@ -126,13 +126,16 @@ CREATE INDEX IF NOT EXISTS idx_staff_role ON staff_directory(role);
 
 -- Web edition: authentication (one firm, shared team). Wired up in P4.
 CREATE TABLE IF NOT EXISTS users (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    email         TEXT NOT NULL UNIQUE,
-    password_hash TEXT,                      -- argon2; NULL for SSO-only accounts
-    display_name  TEXT NOT NULL,
-    role          TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin','member')),
-    ms_oid        TEXT UNIQUE,               -- reserved for Microsoft SSO linking
-    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    email          TEXT NOT NULL UNIQUE,
+    password_hash  TEXT,                     -- argon2; NULL for SSO-only accounts
+    display_name   TEXT NOT NULL,
+    role           TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin','member')),
+    ms_oid         TEXT UNIQUE,              -- reserved for Microsoft SSO linking
+    created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    failed_attempts INTEGER NOT NULL DEFAULT 0,  -- consecutive failed logins (rolling window)
+    last_failed_at TEXT,                      -- timestamp of the last failed login
+    locked_until   TEXT                       -- if in the future, logins are refused
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -143,6 +146,34 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
+-- Web edition: single-use tokens for self-service password setup (invite) and,
+-- later, reset. Only the sha256 of the raw token is stored, so a DB read alone
+-- cannot be replayed to set a password. Rows cascade when the user is deleted.
+CREATE TABLE IF NOT EXISTS user_tokens (
+    token_hash TEXT PRIMARY KEY,               -- sha256 hex of the raw token
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    purpose    TEXT NOT NULL CHECK (purpose IN ('invite','reset')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL,
+    used_at    TEXT                             -- NULL until consumed; single-use
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_tokens_user ON user_tokens(user_id);
+
+-- Security audit trail for account events (invite/reset issued, activation,
+-- password change, lockout). Deliberately has NO foreign keys so the history
+-- survives user deletion; emails are denormalized so entries stay readable.
+CREATE TABLE IF NOT EXISTS auth_events (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    event          TEXT NOT NULL,          -- invite_created | reset_created | activated | password_changed | account_locked
+    target_user_id INTEGER,                -- the account acted upon (may be gone later)
+    target_email   TEXT,
+    actor_user_id  INTEGER,                -- who did it (admin, the user, or NULL = system)
+    actor_email    TEXT,
+    detail         TEXT                     -- freeform (e.g. token purpose)
+);
 "#;
 
 /// Builds the connection pool for the SQLite file at `path`, applying WAL and
@@ -176,6 +207,14 @@ pub fn init_pool(path: &Path) -> Result<Pool, String> {
     )
     .map_err(|e| format!("index projects.owner_user_id: {e}"))?;
 
+    // Login rate-limiting columns for DBs created before lockout was added.
+    ensure_column(&conn, "users", "failed_attempts", "INTEGER NOT NULL DEFAULT 0")
+        .map_err(|e| format!("migrate users.failed_attempts: {e}"))?;
+    ensure_column(&conn, "users", "last_failed_at", "TEXT")
+        .map_err(|e| format!("migrate users.last_failed_at: {e}"))?;
+    ensure_column(&conn, "users", "locked_until", "TEXT")
+        .map_err(|e| format!("migrate users.locked_until: {e}"))?;
+
     Ok(pool)
 }
 
@@ -186,6 +225,7 @@ pub struct Maintenance {
     pub expired_sessions: usize,
     pub orphan_projects: usize,
     pub orphan_last_project_keys: usize,
+    pub spent_tokens: usize,
 }
 
 /// Removes rows that can accumulate over time: expired sessions, projects whose
@@ -214,10 +254,19 @@ pub fn run_maintenance(conn: &Connection) -> Result<Maintenance, String> {
             [],
         )
         .map_err(|e| e.to_string())?;
+    // Invite/reset tokens that are used or past expiry are dead weight.
+    let spent_tokens = conn
+        .execute(
+            "DELETE FROM user_tokens \
+             WHERE used_at IS NOT NULL OR expires_at <= datetime('now')",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
     Ok(Maintenance {
         expired_sessions,
         orphan_projects,
         orphan_last_project_keys,
+        spent_tokens,
     })
 }
 

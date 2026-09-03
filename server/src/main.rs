@@ -123,12 +123,15 @@ async fn main() {
         // prior user deletions) so the DB self-heals on boot.
         match db::run_maintenance(&conn) {
             Ok(m) => {
-                if m.expired_sessions + m.orphan_projects + m.orphan_last_project_keys > 0 {
+                if m.expired_sessions + m.orphan_projects + m.orphan_last_project_keys + m.spent_tokens
+                    > 0
+                {
                     tracing::info!(
-                        "startup cleanup: {} expired session(s), {} orphan project(s), {} stale marker(s)",
+                        "startup cleanup: {} expired session(s), {} orphan project(s), {} stale marker(s), {} spent token(s)",
                         m.expired_sessions,
                         m.orphan_projects,
-                        m.orphan_last_project_keys
+                        m.orphan_last_project_keys,
+                        m.spent_tokens
                     );
                 }
             }
