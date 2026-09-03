@@ -1,0 +1,32 @@
+[package]
+name = "sa2025-web"
+version = "0.1.0"
+description = "SA-2025 Generator - web (multi-user) server"
+edition = "2021"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Shared SQLite (WAL) behind an r2d2 pool - matches the desktop's rusqlite 0.32.
+rusqlite = { version = "0.32", features = ["bundled"] }
+r2d2 = "0.8"
+r2d2_sqlite = "0.25"
+
+# NZBN lookup (async HTTP), matching the desktop dependency set.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# CSV export/import + tolerant (Windows-1252) decoding, matching the desktop set.
+csv = "1"
+encoding_rs = "0.8"
+
+# Auth: argon2 password hashing; rand_core/getrandom supplies OsRng for salts
+# and session tokens.
+argon2 = "0.5"
+rand_core = { version = "0.6", features = ["getrandom"] }

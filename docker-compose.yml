@@ -1,0 +1,23 @@
+# Local run for the SA-2025 Generator web edition.
+#
+#   docker compose up --build
+#
+# Then point a browser (or an Nginx Proxy Manager subdomain) at the published
+# port. The named volume persists the SQLite database across restarts (used
+# from P1 onward).
+services:
+  sa2025-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sa2025-web:latest
+    env_file:
+      - .env
+    ports:
+      - "${HOST_PORT:-8080}:8080"
+    volumes:
+      - sa2025-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  sa2025-data:

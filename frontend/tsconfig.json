@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Tauri import shims (mirror of vite.config.ts resolve.alias) */
+    "baseUrl": ".",
+    "paths": {
+      "@tauri-apps/api/core": ["src/tauri-shim/core"],
+      "@tauri-apps/api/window": ["src/tauri-shim/window"],
+      "@tauri-apps/api/event": ["src/tauri-shim/event"],
+      "@tauri-apps/api/path": ["src/tauri-shim/path"],
+      "@tauri-apps/api/app": ["src/tauri-shim/app"],
+      "@tauri-apps/plugin-dialog": ["src/tauri-shim/dialog"],
+      "@tauri-apps/plugin-opener": ["src/tauri-shim/opener"],
+      "@tauri-apps/plugin-updater": ["src/tauri-shim/updater"],
+      "@tauri-apps/plugin-process": ["src/tauri-shim/process"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
