@@ -8,7 +8,16 @@ dist-ssr
 
 # Secrets / local config
 .env
+*.env.backup
 *.local
+
+# Local data/backup dumps (never source)
+*.tar.gz
+
+# Local dev SQLite database (created/seeded at runtime; not source)
+server/data/sa2025.sqlite
+server/data/sa2025.sqlite-shm
+server/data/sa2025.sqlite-wal
 
 # Tooling / editor
 .claude/
