@@ -24,6 +24,7 @@ export function todayIso(): string {
 // documents sent outside the app can be recorded too.
 export function AuditLogModal({ subName, audit, onSave, onClose }: AuditLogModalProps) {
   const [loaSent, setLoaSent] = useState(audit.loa_sent_date ?? "");
+  const [faSent, setFaSent] = useState(audit.fa_sent_date ?? "");
   const [saSent, setSaSent] = useState(audit.sa_sent_date ?? "");
   const [saReturned, setSaReturned] = useState(audit.sa_returned_date ?? "");
   const [notes, setNotes] = useState(audit.notes ?? "");
@@ -32,6 +33,7 @@ export function AuditLogModal({ subName, audit, onSave, onClose }: AuditLogModal
     onSave({
       subcontractor_id: audit.subcontractor_id,
       loa_sent_date: loaSent || null,
+      fa_sent_date: faSent || null,
       sa_sent_date: saSent || null,
       sa_returned_date: saReturned || null,
       notes: notes.trim() || null,
@@ -50,6 +52,10 @@ export function AuditLogModal({ subName, audit, onSave, onClose }: AuditLogModal
         <fieldset className="audit__doc">
           <legend className="audit__doc-title">Letter of Award</legend>
           <DateField label="Sent" value={loaSent} onChange={setLoaSent} />
+        </fieldset>
+        <fieldset className="audit__doc">
+          <legend className="audit__doc-title">Final Account</legend>
+          <DateField label="Sent" value={faSent} onChange={setFaSent} />
         </fieldset>
         <DocSection
           heading="Subcontract Agreement"

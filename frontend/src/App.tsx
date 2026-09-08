@@ -3,6 +3,7 @@ import { MenuBar, type MenuDef } from "./components/MenuBar";
 import { TabBar } from "./components/TabBar";
 import { SubcontractInfoView } from "./components/SubcontractInfoView";
 import { LetterOfAwardView } from "./components/LetterOfAwardView";
+import { FinalAccountView } from "./components/FinalAccountView";
 import { Sidebar } from "./components/Sidebar";
 import { PdfViewer, type PdfViewerHandle } from "./components/PdfViewer";
 import { StatusBar } from "./components/StatusBar";
@@ -59,7 +60,7 @@ type Dialog =
   | { kind: "confirmDeleteProject"; project: Project }
   | { kind: "confirmDeleteSub"; sub: Subcontractor }
   | { kind: "auditLog"; sub: Subcontractor }
-  | { kind: "confirmSent"; sub: Subcontractor; doc: "loa" | "sa" }
+  | { kind: "confirmSent"; sub: Subcontractor; doc: "loa" | "fa" | "sa" }
   | { kind: "exportCsv" }
   | { kind: "exportPdf" }
   | { kind: "importReport"; path: string; report: ImportReport }
@@ -69,7 +70,7 @@ type Dialog =
 
 const sanitize = (s: string) => s.replace(/[\\/:*?"<>|]/g, "_").trim();
 
-type AppTab = "pdf" | "subcontract-info" | "letter-of-award";
+type AppTab = "pdf" | "subcontract-info" | "letter-of-award" | "final-account";
 
 function App() {
   // Top-level tabs
@@ -609,6 +610,7 @@ function App() {
           { key: "pdf", label: "Subcontract Agreement" },
           { key: "subcontract-info", label: "Subcontract Info" },
           { key: "letter-of-award", label: "Letter of Award" },
+          { key: "final-account", label: "Final Account" },
         ]}
         active={activeTab}
         onSelect={setActiveTab}
@@ -699,6 +701,17 @@ function App() {
           onSelect={setActiveSubId}
           zoom={zoom}
           onEmailed={(s) => setDialog({ kind: "confirmSent", sub: s, doc: "loa" })}
+        />
+      )}
+
+      {activeTab === "final-account" && (
+        <FinalAccountView
+          project={project}
+          subs={subs}
+          activeSubId={activeSubId}
+          onSelect={setActiveSubId}
+          zoom={zoom}
+          onEmailed={(s) => setDialog({ kind: "confirmSent", sub: s, doc: "fa" })}
         />
       )}
 
@@ -810,12 +823,14 @@ function App() {
           title="Mark as sent?"
           confirmLabel="Mark sent"
           danger={false}
-          message={`Record ${dialog.doc === "loa" ? "Letter of Award" : "Subcontract Agreement"} to “${dialog.sub.name}” as sent today (${todayIso()})?`}
+          message={`Record ${dialog.doc === "loa" ? "Letter of Award" : dialog.doc === "fa" ? "Final Account" : "Subcontract Agreement"} to “${dialog.sub.name}” as sent today (${todayIso()})?`}
           onConfirm={async () => {
             const patch: Partial<Audit> =
               dialog.doc === "loa"
                 ? { loa_sent_date: todayIso() }
-                : { sa_sent_date: todayIso() };
+                : dialog.doc === "fa"
+                  ? { fa_sent_date: todayIso() }
+                  : { sa_sent_date: todayIso() };
             await patchAudit(dialog.sub.id, patch);
             close();
           }}

@@ -5,6 +5,7 @@ import { fileToScaledPngDataUrl } from "../lib/imageResize";
 import { LoaBodyEditor } from "./LoaBodyEditor";
 import { FieldDefaultsSection } from "./FieldDefaultsSection";
 import { DEFAULT_LOA_BODY, LOA_GLOBAL_BODY_KEY } from "../lib/letterOfAward";
+import { DEFAULT_FA_BODY, FA_GLOBAL_BODY_KEY, FA_PLACEHOLDERS } from "../lib/finalAccount";
 import {
   DEFAULT_EMAIL_BODY,
   DEFAULT_EMAIL_SUBJECT,
@@ -36,6 +37,7 @@ type SectionKey =
   | "lists"
   | "defaults"
   | "loa"
+  | "fa"
   | "email";
 
 const NAV_SECTIONS: { key: SectionKey; label: string }[] = [
@@ -44,6 +46,7 @@ const NAV_SECTIONS: { key: SectionKey; label: string }[] = [
   { key: "lists", label: "Reference Lists" },
   { key: "defaults", label: "Field Defaults" },
   { key: "loa", label: "Letter of Award" },
+  { key: "fa", label: "Final Account" },
   { key: "email", label: "Email" },
 ];
 
@@ -222,6 +225,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [companyAddr2, setCompanyAddr2] = useState("");
   const [lists, setLists] = useState<Record<string, string>>({});
   const [loaBody, setLoaBody] = useState("");
+  const [faBody, setFaBody] = useState("");
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
 
@@ -237,6 +241,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       }
       setLists(listText);
       setLoaBody((s[LOA_GLOBAL_BODY_KEY] ?? "").trim() || DEFAULT_LOA_BODY);
+      setFaBody((s[FA_GLOBAL_BODY_KEY] ?? "").trim() || DEFAULT_FA_BODY);
       setEmailSubject((s[EMAIL_SUBJECT_KEY] ?? "").trim() || DEFAULT_EMAIL_SUBJECT);
       setEmailBody((s[EMAIL_BODY_KEY] ?? "").trim() || DEFAULT_EMAIL_BODY);
       setLoaded(true);
@@ -379,6 +384,37 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           </div>
           )}
 
+          {section === "fa" && (
+          <div className="settings__section">
+            <div className="settings__sectionhead">
+              <h4>Final Account - default body</h4>
+              <button
+                className="btn btn--secondary"
+                onClick={() => {
+                  setFaBody(DEFAULT_FA_BODY);
+                  saveScalar(FA_GLOBAL_BODY_KEY, DEFAULT_FA_BODY);
+                }}
+              >
+                Reset to default
+              </button>
+            </div>
+            <p className="settings__note">
+              The default statement paragraphs (the “I/We being the
+              subcontractor…”, verification and indemnity text) used for every
+              project. The title, contract header, adjusted-value block and
+              signature grid are fixed and drawn automatically. Click a
+              placeholder to insert it; each project can override this text under
+              the Final Account tab.
+            </p>
+            <LoaBodyEditor
+              value={faBody}
+              onChange={setFaBody}
+              onBlur={() => saveScalar(FA_GLOBAL_BODY_KEY, faBody)}
+              placeholders={FA_PLACEHOLDERS}
+            />
+          </div>
+          )}
+
           {section === "email" && (
           <div className="settings__section">
             <div className="settings__sectionhead">
@@ -397,12 +433,12 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
             </div>
             <p className="settings__note">
               Used for the draft opened by the Email buttons on the Subcontract
-              Agreement and Letter of Award tabs. Placeholders{" "}
+              Agreement, Letter of Award and Final Account tabs. Placeholders{" "}
               <code>{"{{Document}}"}</code>, <code>{"{{Subcontractor}}"}</code>,{" "}
               <code>{"{{Project_Name}}"}</code> and <code>{"{{Project_Number}}"}</code>{" "}
               are filled in automatically - <code>{"{{Document}}"}</code> becomes
-              “Subcontract Agreement” or “Letter of Award”. You can type placeholders
-              into the subject too.
+              “Subcontract Agreement”, “Letter of Award” or “Final Account”. You can
+              type placeholders into the subject too.
             </p>
             <div className="form__row">
               <label className="form__label">Subject</label>

@@ -114,6 +114,7 @@ export const api = {
 export interface Audit {
   subcontractor_id: number;
   loa_sent_date: string | null;
+  fa_sent_date: string | null;
   sa_sent_date: string | null;
   sa_returned_date: string | null;
   notes: string | null;
@@ -125,6 +126,7 @@ export function emptyAudit(subcontractorId: number): Audit {
   return {
     subcontractor_id: subcontractorId,
     loa_sent_date: null,
+    fa_sent_date: null,
     sa_sent_date: null,
     sa_returned_date: null,
     notes: null,

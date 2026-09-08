@@ -68,6 +68,20 @@
   flex: 1 1 auto;
 }
 
+.loa__varfield {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.loa__varinput {
+  width: 96px;
+  text-align: right;
+}
+
 .loa__exportmsg {
   font-size: 0.82rem;
   color: var(--text-muted);

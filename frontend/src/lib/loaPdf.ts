@@ -84,21 +84,26 @@ async function embedDataUrl(pdf: PDFDocument, dataUrl: string): Promise<PDFImage
   return isPng ? pdf.embedPng(bytes) : pdf.embedJpg(bytes);
 }
 
+// Branch addresses spread across the full content width in equal slots with
+// symmetric per-column alignment: first column left-justified (flush to the
+// left margin), last column right-justified (flush to the right margin), middle
+// columns centred in their slots.
 function drawFooter(page: PDFPage, font: PDFFont, fontBold: PDFFont) {
-  const colWidth = CONTENT_W / FOOTER_BRANCHES.length;
+  const n = FOOTER_BRANCHES.length;
+  const slot = CONTENT_W / n;
+  const right = PAGE_W - MARGIN_R;
   const topY = 64;
   const leading = 9.5;
   const size = 7.5;
   FOOTER_BRANCHES.forEach((lines, col) => {
-    const x = MARGIN_L + col * colWidth;
     lines.forEach((line, i) => {
-      page.drawText(line, {
-        x,
-        y: topY - i * leading,
-        size,
-        font: i === 0 ? fontBold : font,
-        color: NAVY,
-      });
+      const f = i === 0 ? fontBold : font;
+      const w = f.widthOfTextAtSize(line, size);
+      let x: number;
+      if (col === 0) x = MARGIN_L;
+      else if (col === n - 1) x = right - w;
+      else x = MARGIN_L + (col + 0.5) * slot - w / 2;
+      page.drawText(line, { x, y: topY - i * leading, size, font: f, color: NAVY });
     });
   });
 }
@@ -165,11 +170,28 @@ export async function renderLetterOfAward(
       continue;
     }
 
-    for (const line of wrapLine(logical, font, FONT_SIZE, CONTENT_W)) {
+    // Fully justify each wrapped line except the last of a logical line (and
+    // single-word lines), so paragraphs have flush left and right edges while
+    // addresses, salutations and sign-offs stay naturally left-aligned.
+    const wrapped = wrapLine(logical, font, FONT_SIZE, CONTENT_W);
+    const spaceW = font.widthOfTextAtSize(" ", FONT_SIZE);
+    wrapped.forEach((line, idx) => {
       ensureSpace(LINE_HEIGHT);
       y -= LINE_HEIGHT;
-      page.drawText(line, { x: MARGIN_L, y, size: FONT_SIZE, font, color: TEXT_COLOR });
-    }
+      const words = line.split(" ");
+      const isLast = idx === wrapped.length - 1;
+      if (!isLast && words.length > 1) {
+        const naturalW = font.widthOfTextAtSize(line, FONT_SIZE);
+        const extraPerGap = (CONTENT_W - naturalW) / (words.length - 1);
+        let x = MARGIN_L;
+        words.forEach((w, wi) => {
+          page.drawText(w, { x, y, size: FONT_SIZE, font, color: TEXT_COLOR });
+          x += font.widthOfTextAtSize(w, FONT_SIZE) + spaceW + (wi < words.length - 1 ? extraPerGap : 0);
+        });
+      } else {
+        page.drawText(line, { x: MARGIN_L, y, size: FONT_SIZE, font, color: TEXT_COLOR });
+      }
+    });
   }
 
   return pdf.save();

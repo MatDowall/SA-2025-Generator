@@ -16,6 +16,8 @@ const FORMAT_VERSION: u32 = 1;
 #[derive(Serialize, Deserialize, Default)]
 struct SaAudit {
     loa_sent_date: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    fa_sent_date: Option<String>,
     sa_sent_date: Option<String>,
     sa_returned_date: Option<String>,
     notes: Option<String>,
@@ -24,6 +26,7 @@ struct SaAudit {
 impl SaAudit {
     fn is_empty(&self) -> bool {
         self.loa_sent_date.is_none()
+            && self.fa_sent_date.is_none()
             && self.sa_sent_date.is_none()
             && self.sa_returned_date.is_none()
             && self.notes.is_none()
@@ -82,7 +85,7 @@ pub fn export_project_file(conn: &Connection, project_id: i64) -> Result<String,
 
     let mut audit_stmt = conn
         .prepare(
-            "SELECT loa_sent_date, sa_sent_date, sa_returned_date, notes \
+            "SELECT loa_sent_date, fa_sent_date, sa_sent_date, sa_returned_date, notes \
              FROM subcontractor_audit WHERE subcontractor_id = ?1",
         )
         .map_err(map_err)?;
@@ -103,9 +106,10 @@ pub fn export_project_file(conn: &Connection, project_id: i64) -> Result<String,
             .query_row(params![sub_id], |r| {
                 Ok(SaAudit {
                     loa_sent_date: r.get(0)?,
-                    sa_sent_date: r.get(1)?,
-                    sa_returned_date: r.get(2)?,
-                    notes: r.get(3)?,
+                    fa_sent_date: r.get(1)?,
+                    sa_sent_date: r.get(2)?,
+                    sa_returned_date: r.get(3)?,
+                    notes: r.get(4)?,
                 })
             })
             .ok()
@@ -186,11 +190,12 @@ pub fn import_project_file(
         if let Some(a) = sub.audit.as_ref().filter(|a| !a.is_empty()) {
             tx.execute(
                 "INSERT INTO subcontractor_audit \
-                   (subcontractor_id, loa_sent_date, sa_sent_date, sa_returned_date, notes) \
-                 VALUES (?1, ?2, ?3, ?4, ?5)",
+                   (subcontractor_id, loa_sent_date, fa_sent_date, sa_sent_date, sa_returned_date, notes) \
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 params![
                     sub_id,
                     a.loa_sent_date,
+                    a.fa_sent_date,
                     a.sa_sent_date,
                     a.sa_returned_date,
                     a.notes,
