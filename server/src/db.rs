@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS subcontractor_audit (
     subcontractor_id  INTEGER PRIMARY KEY REFERENCES subcontractors(id) ON DELETE CASCADE,
     loa_sent_date      TEXT,
     fa_sent_date       TEXT,
+    fa_returned_date   TEXT,
     sa_sent_date       TEXT,
     sa_returned_date   TEXT,
     notes              TEXT
@@ -220,6 +221,10 @@ pub fn init_pool(path: &Path) -> Result<Pool, String> {
     // tab was added.
     ensure_column(&conn, "subcontractor_audit", "fa_sent_date", "TEXT")
         .map_err(|e| format!("migrate subcontractor_audit.fa_sent_date: {e}"))?;
+
+    // Final Account return-date column, added alongside the audit-log Returned field.
+    ensure_column(&conn, "subcontractor_audit", "fa_returned_date", "TEXT")
+        .map_err(|e| format!("migrate subcontractor_audit.fa_returned_date: {e}"))?;
 
     Ok(pool)
 }

@@ -168,17 +168,18 @@ export function Sidebar({
   );
 }
 
-// Up-to-three status pills per row: Letter of Award and Final Account (both
-// send-only, one-way documents), plus the Subcontract Agreement. Amber "Sent" = awaiting
-// the signed return, green "Returned" = signed copy back; a document with no
-// activity shows no pill. Hover reveals the dates.
+// Up-to-three status pills per row: the Letter of Award (a send-only, one-way
+// document), plus the Final Account and Subcontract Agreement (both round-trip:
+// sent then returned). Amber "Sent" = awaiting the signed return, green
+// "Returned" = signed copy back; a document with no activity shows no pill.
+// Hover reveals the dates.
 function AuditBadge({ audit }: { audit?: Audit }) {
   if (!audit) return null;
   const pills = [
     // LOA "Sent" is informative (the one-way document is done), so a neutral
     // blue - not the amber SA "Sent" uses to flag an outstanding return.
     docPill("LOA", "Letter of Award", audit.loa_sent_date, null, "info"),
-    docPill("FA", "Final Account", audit.fa_sent_date, null, "info"),
+    docPill("FA", "Final Account", audit.fa_sent_date, audit.fa_returned_date, "await"),
     docPill("SA", "Subcontract Agreement", audit.sa_sent_date, audit.sa_returned_date, "await"),
   ].filter((p): p is DocPill => p !== null);
   if (pills.length === 0) return null;
