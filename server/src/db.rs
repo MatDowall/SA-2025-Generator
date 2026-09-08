@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS staff_directory (
 CREATE TABLE IF NOT EXISTS subcontractor_audit (
     subcontractor_id  INTEGER PRIMARY KEY REFERENCES subcontractors(id) ON DELETE CASCADE,
     loa_sent_date      TEXT,
+    fa_sent_date       TEXT,
     sa_sent_date       TEXT,
     sa_returned_date   TEXT,
     notes              TEXT
@@ -214,6 +215,11 @@ pub fn init_pool(path: &Path) -> Result<Pool, String> {
         .map_err(|e| format!("migrate users.last_failed_at: {e}"))?;
     ensure_column(&conn, "users", "locked_until", "TEXT")
         .map_err(|e| format!("migrate users.locked_until: {e}"))?;
+
+    // Final Account send-date column for DBs created before the Final Account
+    // tab was added.
+    ensure_column(&conn, "subcontractor_audit", "fa_sent_date", "TEXT")
+        .map_err(|e| format!("migrate subcontractor_audit.fa_sent_date: {e}"))?;
 
     Ok(pool)
 }

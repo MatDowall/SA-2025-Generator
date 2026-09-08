@@ -18,6 +18,7 @@ dist-ssr
 server/data/sa2025.sqlite
 server/data/sa2025.sqlite-shm
 server/data/sa2025.sqlite-wal
+server/.dev-data/
 
 # Tooling / editor
 .claude/

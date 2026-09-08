@@ -14,6 +14,7 @@ fn map_err<E: std::fmt::Display>(e: E) -> String {
 pub struct Audit {
     pub subcontractor_id: i64,
     pub loa_sent_date: Option<String>,
+    pub fa_sent_date: Option<String>,
     pub sa_sent_date: Option<String>,
     pub sa_returned_date: Option<String>,
     pub notes: Option<String>,
@@ -28,6 +29,7 @@ fn nz(v: Option<String>) -> Option<String> {
 impl Audit {
     fn is_empty(&self) -> bool {
         self.loa_sent_date.is_none()
+            && self.fa_sent_date.is_none()
             && self.sa_sent_date.is_none()
             && self.sa_returned_date.is_none()
             && self.notes.is_none()
@@ -40,7 +42,7 @@ pub fn get_audit_for_project(
 ) -> Result<HashMap<i64, Audit>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT a.subcontractor_id, a.loa_sent_date, \
+            "SELECT a.subcontractor_id, a.loa_sent_date, a.fa_sent_date, \
                     a.sa_sent_date, a.sa_returned_date, a.notes \
              FROM subcontractor_audit a \
              JOIN subcontractors s ON s.id = a.subcontractor_id \
@@ -52,9 +54,10 @@ pub fn get_audit_for_project(
             Ok(Audit {
                 subcontractor_id: r.get(0)?,
                 loa_sent_date: r.get(1)?,
-                sa_sent_date: r.get(2)?,
-                sa_returned_date: r.get(3)?,
-                notes: r.get(4)?,
+                fa_sent_date: r.get(2)?,
+                sa_sent_date: r.get(3)?,
+                sa_returned_date: r.get(4)?,
+                notes: r.get(5)?,
             })
         })
         .map_err(map_err)?;
@@ -70,6 +73,7 @@ pub fn set_audit(conn: &Connection, audit: Audit) -> Result<(), String> {
     let audit = Audit {
         subcontractor_id: audit.subcontractor_id,
         loa_sent_date: nz(audit.loa_sent_date),
+        fa_sent_date: nz(audit.fa_sent_date),
         sa_sent_date: nz(audit.sa_sent_date),
         sa_returned_date: nz(audit.sa_returned_date),
         notes: nz(audit.notes),
@@ -84,16 +88,18 @@ pub fn set_audit(conn: &Connection, audit: Audit) -> Result<(), String> {
     }
     conn.execute(
         "INSERT INTO subcontractor_audit \
-           (subcontractor_id, loa_sent_date, sa_sent_date, sa_returned_date, notes) \
-         VALUES (?1, ?2, ?3, ?4, ?5) \
+           (subcontractor_id, loa_sent_date, fa_sent_date, sa_sent_date, sa_returned_date, notes) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6) \
          ON CONFLICT(subcontractor_id) DO UPDATE SET \
            loa_sent_date = excluded.loa_sent_date, \
+           fa_sent_date = excluded.fa_sent_date, \
            sa_sent_date = excluded.sa_sent_date, \
            sa_returned_date = excluded.sa_returned_date, \
            notes = excluded.notes",
         params![
             audit.subcontractor_id,
             audit.loa_sent_date,
+            audit.fa_sent_date,
             audit.sa_sent_date,
             audit.sa_returned_date,
             audit.notes,
