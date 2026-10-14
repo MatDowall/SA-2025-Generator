@@ -1,4 +1,5 @@
-// Stable column order for the hidden "ContractInfo" HyperFormula sheet used
+// Stable column order for the hidden "ContractInfo" HyperFormula sheet (one row
+// per subcontractor, same row number as SubcontractorDetails) used
 // by the Mapping sheet (see hyperformulaEngine.ts / mappingFormulas.ts).
 // Only field_keys actually referenced by the legacy workbook's "SA2025
 // Template" tab formulas are included here - e.g. Job Number, Site Address,
@@ -76,11 +77,11 @@ function colLetterForIndex(index: number): string {
   return s;
 }
 
-/** The ContractInfo sheet's A1-style column letter for a given field_key (row 1 always). */
-export function ciCell(fieldKey: string): string {
+/** The ContractInfo sheet's A1-style cell for a field_key on a subcontractor's (1-based) row. */
+export function ciCell(fieldKey: string, row: number): string {
   const idx = INDEX_BY_KEY.get(fieldKey);
   if (idx === undefined) {
     throw new Error(`contractInfoCellMap: unknown field_key "${fieldKey}"`);
   }
-  return `${colLetterForIndex(idx)}1`;
+  return `${colLetterForIndex(idx)}${row}`;
 }

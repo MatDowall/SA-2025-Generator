@@ -1,3 +1,9 @@
+import {
+  CONTRACT_INFO_LEFT,
+  CONTRACT_INFO_RIGHT,
+  type ContractInfoField,
+} from "./contractInfoFields";
+
 // Column schema for the "Subcontractor Details" grid - ported verbatim
 // (headers, ordering, column letters A–BR) from the legacy workbook's
 // "Subcontractor Details" tab. column_key is the persistence key
@@ -13,8 +19,6 @@ export type GridColumnType =
   | "name-mirror"
   /** Read-only, computed live by HyperFormula (TP Address/Email, Contract Value). */
   | "computed"
-  /** Read-only, mirrors a global Contract Info answer for every row. */
-  | "contract-info-mirror"
   /** Read-only, auto-built from the Trade column + Settings sub-trade codes + Contract Info job number. */
   | "cost-code";
 
@@ -23,13 +27,24 @@ export interface GridColumn {
   key: string;
   title: string;
   type: GridColumnType;
-  /** Only for type "contract-info-mirror": the Contract Info field_key it mirrors. */
-  contractInfoKey?: string;
+  /**
+   * Set on columns that were formerly global "Contract Info" answers: the
+   * Contract Info field_key this column holds. The top "defaults" row of the
+   * grid broadcasts a value to every row's cell in such a column; each row's
+   * cell can then be overridden individually.
+   */
+  ciKey?: string;
+  /** Static dropdown options (Contract Info select/radio fields). */
+  options?: string[];
+  /** Dropdown sourced from the staff directory for this role. */
+  staffRole?: "PM" | "BTM" | "QS";
+  /** Value a defaults-row cell shows until the user sets one. */
+  defaultValue?: string;
   /** Only for type "dropdown": the Settings reference-list key (settings.<key>) it sources options from. */
   settingsListKey?: string;
 }
 
-export const GRID_COLUMNS: GridColumn[] = [
+const BASE_GRID_COLUMNS: GridColumn[] = [
   { letter: "A", key: "A_trade", title: "Trade", type: "dropdown", settingsListKey: "list_sub_trades" },
   { letter: "B", key: "B_subcontractor", title: "Subcontractor", type: "name-mirror" },
   { letter: "C", key: "C_cost_code", title: "Code", type: "cost-code" },
@@ -64,27 +79,9 @@ export const GRID_COLUMNS: GridColumn[] = [
   { letter: "AF", key: "AF_design_responsibilities", title: "5.2.1\nSubcontractor Design Responsibilities", type: "checkbox" },
   { letter: "AG", key: "AG_design_responsibilities_detail", title: "5.2.1\nif yes, the subcontractors design responsibilities are:", type: "text" },
   { letter: "AH", key: "AH_building_consent_required", title: "5.2.2\nSubcontractor is required to obtain building consent for Subcontract works", type: "checkbox" },
-  {
-    letter: "AI",
-    key: "AI_insurance_pc_head_contract",
-    title: "8.2.3\nSubcontract Works insurance required by PC of Head Contract Works",
-    type: "contract-info-mirror",
-    contractInfoKey: "required_until_pc_head_contract",
-  },
-  {
-    letter: "AJ",
-    key: "AJ_insurance_pc_subcontract",
-    title: "8.2.3\nSubcontract Works insurance required by PC of Subcontract Works",
-    type: "contract-info-mirror",
-    contractInfoKey: "required_until_pc_subcontract",
-  },
-  {
-    letter: "AK",
-    key: "AK_insurance_other",
-    title: "8.2.3\nOther",
-    type: "contract-info-mirror",
-    contractInfoKey: "required_until_other",
-  },
+  { letter: "AI", key: "ci_required_until_pc_head_contract", title: "8.2.3\nSubcontract Works insurance required by PC of Head Contract Works", type: "checkbox", ciKey: "required_until_pc_head_contract" },
+  { letter: "AJ", key: "ci_required_until_pc_subcontract", title: "8.2.3\nSubcontract Works insurance required by PC of Subcontract Works", type: "checkbox", ciKey: "required_until_pc_subcontract" },
+  { letter: "AK", key: "ci_required_until_other", title: "8.2.3\nOther", type: "text", ciKey: "required_until_other" },
   { letter: "AL", key: "AL_shop_drawings", title: "Shop Drawings", type: "checkbox" },
   { letter: "AM", key: "AM_shop_drawings_review_period", title: "Shop Drawings Review Period", type: "text" },
   { letter: "AN", key: "AN_as_builts", title: "As-Builts", type: "checkbox" },
@@ -120,10 +117,86 @@ export const GRID_COLUMNS: GridColumn[] = [
   { letter: "BR", key: "BR_special_conditions_in_tender", title: "Special Conditions in\n Subs Tender", type: "text" },
 ];
 
+/** Persistence key (subcontractor_grid_values.column_key) for a Contract Info field's per-row value. */
+export const ciGridKey = (fieldKey: string) => `ci_${fieldKey}`;
+
+function colLetter(index: number): string {
+  let n = index + 1;
+  let out = "";
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    out = String.fromCharCode(65 + rem) + out;
+    n = Math.floor((n - 1) / 26);
+  }
+  return out;
+}
+
+const STAFF_ROLE_BY_KEY: Record<string, GridColumn["staffRole"]> = {
+  project_manager: "PM",
+  site_manager: "BTM",
+  quantity_surveyor: "QS",
+};
+
+// Section 3 (Bonds & Guarantees) duplicated columns U-Y, which were already
+// per-subcontractor, and was never wired into the PDF mapping - so it is not
+// carried over as separate columns.
+const SKIPPED_CI_SECTIONS = new Set(["3. Subcontractor Bonds & Guarantees"]);
+
+function ciColumnsFor(field: ContractInfoField): Omit<GridColumn, "letter">[] {
+  const opts = field.options?.map((o) => o.value);
+  const dflt = field.default;
+  switch (field.type) {
+    case "heading":
+      return [];
+    case "percent-value":
+      return [
+        { key: ciGridKey(field.pctKey!), ciKey: field.pctKey!, title: `${field.label} %`, type: "number" },
+        { key: ciGridKey(field.valueKey!), ciKey: field.valueKey!, title: `${field.label} $`, type: "number" },
+      ];
+    case "text-select":
+      return [
+        { key: ciGridKey(field.textKey!), ciKey: field.textKey!, title: `${field.label}\nvalue`, type: "text" },
+        { key: ciGridKey(field.selectKey!), ciKey: field.selectKey!, title: `${field.label}\nper`, type: "dropdown", options: opts },
+      ];
+    case "checkbox":
+      return [{ key: ciGridKey(field.key), ciKey: field.key, title: field.label, type: "checkbox" }];
+    case "number":
+      return [{ key: ciGridKey(field.key), ciKey: field.key, title: field.label, type: "number" }];
+    case "radio":
+    case "select":
+      return [
+        {
+          key: ciGridKey(field.key),
+          ciKey: field.key,
+          title: field.label,
+          type: "dropdown",
+          options: opts && opts.length ? opts : undefined,
+          staffRole: STAFF_ROLE_BY_KEY[field.key],
+          defaultValue: dflt,
+        },
+      ];
+    default:
+      return [{ key: ciGridKey(field.key), ciKey: field.key, title: field.label, type: "text", defaultValue: dflt }];
+  }
+}
+
+const placedCiKeys = new Set(BASE_GRID_COLUMNS.map((c) => c.ciKey).filter(Boolean) as string[]);
+
+const APPENDED_CI_COLUMNS: GridColumn[] = [...CONTRACT_INFO_LEFT, ...CONTRACT_INFO_RIGHT]
+  .filter((section) => !SKIPPED_CI_SECTIONS.has(section.title))
+  .flatMap((section) => section.fields.flatMap(ciColumnsFor))
+  .filter((c) => !placedCiKeys.has(c.ciKey!))
+  .map((c, i) => ({ ...c, letter: colLetter(BASE_GRID_COLUMNS.length + i) }));
+
+// Original workbook columns keep their letters/positions (the mapping
+// formulas address them by letter); the former Contract Info fields follow.
+export const GRID_COLUMNS: GridColumn[] = [...BASE_GRID_COLUMNS, ...APPENDED_CI_COLUMNS];
+
+/** Every column that is a former Contract Info field (has a defaults-row cell). */
+export const CI_COLUMNS = GRID_COLUMNS.filter((c) => c.ciKey);
+
 export const CHECKBOX_COLUMN_KEYS = new Set(
-  GRID_COLUMNS.filter((c) => c.type === "checkbox" || c.type === "contract-info-mirror")
-    .filter((c) => c.type !== "contract-info-mirror" || c.key !== "AK_insurance_other")
-    .map((c) => c.key),
+  GRID_COLUMNS.filter((c) => c.type === "checkbox").map((c) => c.key),
 );
 
 export const COMPUTED_COLUMN_KEYS = new Set(

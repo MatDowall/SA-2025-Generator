@@ -184,13 +184,16 @@ export function loadStaffQs(hf: HyperFormula, staff: StaffQsEntry[]): number {
   return Math.max(staff.length, 1);
 }
 
-/** Loads the global (single-row) Contract Info answers, keyed by field_key
- *  per CONTRACT_INFO_CELL_ORDER's stable column assignment. */
-export function loadContractInfo(hf: HyperFormula, values: Record<string, string>) {
+/** Loads one Contract Info row per subcontractor (same order as the
+ *  SubcontractorDetails sheet), keyed by field_key per CONTRACT_INFO_CELL_ORDER. */
+export function loadContractInfo(hf: HyperFormula, rows: Record<string, string>[]) {
   const sheetId = hf.getSheetId(CI_SHEET);
   if (sheetId === undefined) return;
-  const row = CONTRACT_INFO_CELL_ORDER.map((key) => values[key] ?? "");
-  hf.setSheetContent(sheetId, [row]);
+  const data = rows.map((values) => CONTRACT_INFO_CELL_ORDER.map((key) => values[key] ?? ""));
+  hf.setSheetContent(
+    sheetId,
+    data.length ? data : [CONTRACT_INFO_CELL_ORDER.map(() => "")],
+  );
 }
 
 export interface MappingSettings {

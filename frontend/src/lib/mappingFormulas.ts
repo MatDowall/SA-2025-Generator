@@ -33,7 +33,7 @@ export interface MappingColumn {
 }
 
 const sd = (col: string, ctx: MappingContext) => `SubcontractorDetails!${col}${ctx.row}`;
-const ci = (key: string) => `ContractInfo!${ciCell(key)}`;
+const ci = (key: string, ctx: MappingContext) => `ContractInfo!${ciCell(key, ctx.row)}`;
 const self = (col: string, ctx: MappingContext) => `${col}${ctx.row}`;
 const tpCol = (col: string, ctx: MappingContext) => `TPCompanies!${col}1:${col}${ctx.tpRowCount}`;
 const staffCol = (col: string, ctx: MappingContext) => `StaffQS!${col}1:${col}${ctx.staffQsRowCount}`;
@@ -46,7 +46,7 @@ const isTrue = (ref: string) => `${ref}=TRUE()`;
 
 export const MAPPING_COLUMNS: MappingColumn[] = [
   // B: Project_Name
-  { letter: "B", fieldName: "Project_Name", formula: () => `=${ci("project_name")}` },
+  { letter: "B", fieldName: "Project_Name", formula: (ctx) => `=${ci("project_name", ctx)}` },
   // C: Subcontractor_Name
   { letter: "C", fieldName: "Subcontractor_Name", formula: (ctx) => `=${sd("B", ctx)}` },
   // D: Subcontractor_Reference
@@ -62,7 +62,7 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
     letter: "H",
     fieldName: "Contractor_Email",
     formula: (ctx) =>
-      `=IFERROR(XLOOKUP(${ci("quantity_surveyor")},${staffCol("A", ctx)},${staffCol("B", ctx)}),"")`,
+      `=IFERROR(XLOOKUP(${ci("quantity_surveyor", ctx)},${staffCol("A", ctx)},${staffCol("B", ctx)}),"")`,
   },
   // I: Contractor_Fax (always "-" in legacy)
   { letter: "I", fieldName: "Contractor_Fax", formula: () => `=${lit("-")}` },
@@ -85,7 +85,7 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   },
   { letter: "M", fieldName: "Date_Year", formula: () => String(new Date().getFullYear()).slice(-2) },
   // N: Principal_Name
-  { letter: "N", fieldName: "Principal_Name", formula: () => `=${ci("principal")}` },
+  { letter: "N", fieldName: "Principal_Name", formula: (ctx) => `=${ci("principal", ctx)}` },
   // O: Subcontract_Value
   { letter: "O", fieldName: "Subcontract_Value", formula: (ctx) => `=${sd("M", ctx)}` },
   // P: Subcontractor_Address_1 - TP Companies address_1 (col E) + ","
@@ -134,7 +134,7 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   // AA: Guarantees_Copies_Attached - from AC
   { letter: "AA", fieldName: "Guarantees_Copies_Attached", formula: (ctx) => `=IF(${isTrue(sd("AC", ctx))},"Yes","No")` },
   // AB: Head_Contract_Type
-  { letter: "AB", fieldName: "Head_Contract_Type", formula: () => `=${ci("head_contract")}` },
+  { letter: "AB", fieldName: "Head_Contract_Type", formula: (ctx) => `=${ci("head_contract", ctx)}` },
   // AC: Operating_Instruction_and_Maintenance_Manuals - from AP
   { letter: "AC", fieldName: "Operating_Instruction_and_Maintenance_Manuals", formula: (ctx) => `=IF(${isTrue(sd("AP", ctx))},"Yes","No")` },
   // AD: Perf_Bond - from U
@@ -182,111 +182,111 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   {
     letter: "AR",
     fieldName: "Aircraft_Watercraft_val",
-    formula: (ctx) => `=IF(${self("BN", ctx)}="No","N/A",${ci("aircraft_watercraft_value")})`,
+    formula: (ctx) => `=IF(${self("BN", ctx)}="No","N/A",${ci("aircraft_watercraft_value", ctx)})`,
   },
   // AS: Completion of the Subcontract Works (checkbox) - On if Ins of Subcontract Works by Sub
   {
     letter: "AS",
     fieldName: "Completion of the Subcontract Works",
-    formula: () => `=IF(${isTrue(ci("ins_of_subcontract_works_by_sub"))},"On","")`,
+    formula: (ctx) => `=IF(${isTrue(ci("ins_of_subcontract_works_by_sub", ctx))},"On","")`,
   },
   // AT: Contract_Works_Deductible
-  { letter: "AT", fieldName: "Contract_Works_Deductible", formula: () => `=${ci("contract_works_deductible")}` },
+  { letter: "AT", fieldName: "Contract_Works_Deductible", formula: (ctx) => `=${ci("contract_works_deductible", ctx)}` },
   // AU: CW_Insurance_by (radio) - display text "Main Contractor"/"Principal"
   {
     letter: "AU",
     fieldName: "CW_Insurance_by",
-    formula: () =>
-      `=IF(${ci("contract_works_ins_by")}="main_contractor","Main Contractor","Principal")`,
+    formula: (ctx) =>
+      `=IF(${ci("contract_works_ins_by", ctx)}="main_contractor","Main Contractor","Principal")`,
   },
   // AV/AW: Demo_Pct/Demo_Value - N/A unless BB (same row) = "Yes"
-  { letter: "AV", fieldName: "Demo_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_demo_removal_pct")})` },
-  { letter: "AW", fieldName: "Demo_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_demo_removal_value")})` },
+  { letter: "AV", fieldName: "Demo_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_demo_removal_pct", ctx)})` },
+  { letter: "AW", fieldName: "Demo_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_demo_removal_value", ctx)})` },
   // AX/AY: Fees_Pct/Fees_Value
-  { letter: "AX", fieldName: "Fees_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_fees_pct")})` },
-  { letter: "AY", fieldName: "Fees_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_fees_value")})` },
+  { letter: "AX", fieldName: "Fees_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_fees_pct", ctx)})` },
+  { letter: "AY", fieldName: "Fees_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_fees_value", ctx)})` },
   // AZ/BA: Inc_Pct/Increase_Cost_Value
-  { letter: "AZ", fieldName: "Inc_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_increase_fees_pct")})` },
-  { letter: "BA", fieldName: "Increase_Cost_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_increase_fees_value")})` },
+  { letter: "AZ", fieldName: "Inc_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_increase_fees_pct", ctx)})` },
+  { letter: "BA", fieldName: "Increase_Cost_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_increase_fees_value", ctx)})` },
   // BB: Insurance_of_Contract_Works_by_Subcontractor (radio)
   {
     letter: "BB",
     fieldName: "Insurance_of_Contract_Works_by_Subcontractor",
-    formula: () => `=IF(${isTrue(ci("ins_of_subcontract_works_by_sub"))},"Yes","No")`,
+    formula: (ctx) => `=IF(${isTrue(ci("ins_of_subcontract_works_by_sub", ctx))},"Yes","No")`,
   },
   // BC: MV_Val
-  { letter: "BC", fieldName: "MV_Val", formula: () => `=${ci("motor_vehicle_insurance")}` },
+  { letter: "BC", fieldName: "MV_Val", formula: (ctx) => `=${ci("motor_vehicle_insurance", ctx)}` },
   // BD: Other (checkbox carrying literal text)
   {
     letter: "BD",
     fieldName: "Other",
-    formula: () => `=IF(${ci("required_until_other")}>"",${ci("required_until_other")},"")`,
+    formula: (ctx) => `=IF(${ci("required_until_other", ctx)}>"",${ci("required_until_other", ctx)},"")`,
   },
   // BE: PC_Due_Date
-  { letter: "BE", fieldName: "PC_Due_Date", formula: () => `=${ci("due_dates_pc_head_contract")}` },
+  { letter: "BE", fieldName: "PC_Due_Date", formula: (ctx) => `=${ci("due_dates_pc_head_contract", ctx)}` },
   // BF: PI_Insurance_Req (radio)
-  { letter: "BF", fieldName: "PI_Insurance_Req", formula: () => `=IF(${isTrue(ci("professional_indemnity_insurance"))},"Yes","No")` },
+  { letter: "BF", fieldName: "PI_Insurance_Req", formula: (ctx) => `=IF(${isTrue(ci("professional_indemnity_insurance", ctx))},"Yes","No")` },
   // BG: PI_Val - N/A unless BF (same row) = "Yes"
-  { letter: "BG", fieldName: "PI_Val", formula: (ctx) => `=IF(${self("BF", ctx)}="No","N/A",${ci("professional_indemnity_amount")})` },
+  { letter: "BG", fieldName: "PI_Val", formula: (ctx) => `=IF(${self("BF", ctx)}="No","N/A",${ci("professional_indemnity_amount", ctx)})` },
   // BH: PL_Insur_Value
-  { letter: "BH", fieldName: "PL_Insur_Value", formula: () => `=${ci("public_liability_insurance")}` },
+  { letter: "BH", fieldName: "PL_Insur_Value", formula: (ctx) => `=${ci("public_liability_insurance", ctx)}` },
   // BI: Plant_Equp_Value
-  { letter: "BI", fieldName: "Plant_Equp_Value", formula: () => `=${ci("plant_equipment_insurance")}` },
+  { letter: "BI", fieldName: "Plant_Equp_Value", formula: (ctx) => `=${ci("plant_equipment_insurance", ctx)}` },
   // BJ: Practical completion of Head Contract (checkbox)
   {
     letter: "BJ",
     fieldName: "Practical completion of Head Contract",
-    formula: () => `=IF(${isTrue(ci("required_until_pc_head_contract"))},"On","")`,
+    formula: (ctx) => `=IF(${isTrue(ci("required_until_pc_head_contract", ctx))},"On","")`,
   },
   // BK: Special_Extension_Req_for_Airside (radio)
-  { letter: "BK", fieldName: "Special_Extension_Req_for_Airside", formula: () => `=IF(${isTrue(ci("mv_special_extension"))},"Yes","No")` },
+  { letter: "BK", fieldName: "Special_Extension_Req_for_Airside", formula: (ctx) => `=IF(${isTrue(ci("mv_special_extension", ctx))},"Yes","No")` },
   // BL: Subcontract_Works_Insurance_Value
-  { letter: "BL", fieldName: "Subcontract_Works_Insurance_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("value_of_subcontract_works_ins")})` },
+  { letter: "BL", fieldName: "Subcontract_Works_Insurance_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("value_of_subcontract_works_ins", ctx)})` },
   // BM: Total_Insur_Value
-  { letter: "BM", fieldName: "Total_Insur_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("total_value_to_be_insured")})` },
+  { letter: "BM", fieldName: "Total_Insur_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("total_value_to_be_insured", ctx)})` },
   // BN: Use_of_Aircraft_or_Watercraft (radio) - Yes if value > 0
   {
     letter: "BN",
     fieldName: "Use_of_Aircraft_or_Watercraft",
-    formula: () => `=IF(N(${ci("aircraft_watercraft_value")})>0,"Yes","No")`,
+    formula: (ctx) => `=IF(N(${ci("aircraft_watercraft_value", ctx)})>0,"Yes","No")`,
   },
   // BO: Var_Intention_Timeframe
-  { letter: "BO", fieldName: "Var_Intention_Timeframe", formula: () => `=${ci("time_notify_intention_to_claim")}` },
+  { letter: "BO", fieldName: "Var_Intention_Timeframe", formula: (ctx) => `=${ci("time_notify_intention_to_claim", ctx)}` },
   // BP: Var_Pct
-  { letter: "BP", fieldName: "Var_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_variations_pct")})` },
+  { letter: "BP", fieldName: "Var_Pct", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_variations_pct", ctx)})` },
   // BQ: Var_Submission_Timeframe
-  { letter: "BQ", fieldName: "Var_Submission_Timeframe", formula: () => `=${ci("time_submission_price_details")}` },
+  { letter: "BQ", fieldName: "Var_Submission_Timeframe", formula: (ctx) => `=${ci("time_submission_price_details", ctx)}` },
   // BR: Variations_Value
-  { letter: "BR", fieldName: "Variations_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_variations_value")})` },
+  { letter: "BR", fieldName: "Variations_Value", formula: (ctx) => `=IF(${self("BB", ctx)}="No","N/A",${ci("allowance_variations_value", ctx)})` },
   // BS: Vibration_Support_Removal (radio) - Yes if value > 0
   {
     letter: "BS",
     fieldName: "Vibration_Support_Removal",
-    formula: () => `=IF(N(${ci("vibration_removal_support_ins")})>0,"Yes","No")`,
+    formula: (ctx) => `=IF(N(${ci("vibration_removal_support_ins", ctx)})>0,"Yes","No")`,
   },
   // BT: Vibration_Support_Val
-  { letter: "BT", fieldName: "Vibration_Support_Val", formula: (ctx) => `=IF(${self("BS", ctx)}="No","N/A",${ci("vibration_removal_support_ins")})` },
+  { letter: "BT", fieldName: "Vibration_Support_Val", formula: (ctx) => `=IF(${self("BS", ctx)}="No","N/A",${ci("vibration_removal_support_ins", ctx)})` },
   // BU: Clain_Frequency [sic - typo preserved from the original AcroForm field name]
-  { letter: "BU", fieldName: "Clain_Frequency", formula: () => `=${ci("claim_frequency")}` },
+  { letter: "BU", fieldName: "Clain_Frequency", formula: (ctx) => `=${ci("claim_frequency", ctx)}` },
   // BV: DLP_Per (dropdown) - defects liability period unit
-  { letter: "BV", fieldName: "DLP_Per", formula: () => `=${ci("defects_liability_period_unit")}` },
+  { letter: "BV", fieldName: "DLP_Per", formula: (ctx) => `=${ci("defects_liability_period_unit", ctx)}` },
   // BW/BX: DLP_Period / DLP_Period_Separable_Portions
-  { letter: "BW", fieldName: "DLP_Period", formula: () => `=${ci("defects_liability_period_value")}` },
-  { letter: "BX", fieldName: "DLP_Period_Separable_Portions", formula: () => `=${ci("defects_liability_period_separable_value")}` },
+  { letter: "BW", fieldName: "DLP_Period", formula: (ctx) => `=${ci("defects_liability_period_value", ctx)}` },
+  { letter: "BX", fieldName: "DLP_Period_Separable_Portions", formula: (ctx) => `=${ci("defects_liability_period_separable_value", ctx)}` },
   // BY: DLP_Sep_Por_Per
-  { letter: "BY", fieldName: "DLP_Sep_Por_Per", formula: () => `=${ci("defects_liability_period_separable_unit")}` },
+  { letter: "BY", fieldName: "DLP_Sep_Por_Per", formula: (ctx) => `=${ci("defects_liability_period_separable_unit", ctx)}` },
   // BZ: Interim_Final_Account_Due_Date - N/A unless CA (same row) = "Yes"
-  { letter: "BZ", fieldName: "Interim_Final_Account_Due_Date", formula: (ctx) => `=IF(${self("CA", ctx)}="No","N/A",${ci("interim_final_account_due")})` },
+  { letter: "BZ", fieldName: "Interim_Final_Account_Due_Date", formula: (ctx) => `=IF(${self("CA", ctx)}="No","N/A",${ci("interim_final_account_due", ctx)})` },
   // CA: Interim_Final_Account_Process (radio)
-  { letter: "CA", fieldName: "Interim_Final_Account_Process", formula: () => `=IF(${isTrue(ci("interim_final_account_process"))},"Yes","No")` },
+  { letter: "CA", fieldName: "Interim_Final_Account_Process", formula: (ctx) => `=IF(${isTrue(ci("interim_final_account_process", ctx))},"Yes","No")` },
   // CB/CC: LD_Per / LD_Sep_Por_Per
-  { letter: "CB", fieldName: "LD_Per", formula: () => `=${ci("lds_applicable_head_contract_unit")}` },
-  { letter: "CC", fieldName: "LD_Sep_Por_Per", formula: () => `=${ci("lds_applicable_head_contract_separable_unit")}` },
+  { letter: "CB", fieldName: "LD_Per", formula: (ctx) => `=${ci("lds_applicable_head_contract_unit", ctx)}` },
+  { letter: "CC", fieldName: "LD_Sep_Por_Per", formula: (ctx) => `=${ci("lds_applicable_head_contract_separable_unit", ctx)}` },
   // CD/CE: LD_Sep_Por_Value / LD_Val
-  { letter: "CD", fieldName: "LD_Sep_Por_Value", formula: () => `=${ci("lds_applicable_head_contract_separable_value")}` },
-  { letter: "CE", fieldName: "LD_Val", formula: () => `=${ci("lds_applicable_head_contract_value")}` },
+  { letter: "CD", fieldName: "LD_Sep_Por_Value", formula: (ctx) => `=${ci("lds_applicable_head_contract_separable_value", ctx)}` },
+  { letter: "CE", fieldName: "LD_Val", formula: (ctx) => `=${ci("lds_applicable_head_contract_value", ctx)}` },
   // CF: PC_Separable_Portions_Date
-  { letter: "CF", fieldName: "PC_Separable_Portions_Date", formula: () => `=${ci("due_dates_pc_head_contract_separable")}` },
+  { letter: "CF", fieldName: "PC_Separable_Portions_Date", formula: (ctx) => `=${ci("due_dates_pc_head_contract_separable", ctx)}` },
   // CG–CK: Retention %/values - N/A unless Subcontractor Details!N (Retentions, same row) = "true"
   { letter: "CG", fieldName: "Ret_First_Pct", formula: (ctx) => `=IF(${sd("N", ctx)}<>TRUE(),"N/A",${sd("O", ctx)})` },
   { letter: "CH", fieldName: "Ret_First_Val", formula: (ctx) => `=IF(${sd("N", ctx)}<>TRUE(),"N/A",${sd("P", ctx)})` },
@@ -303,7 +303,7 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   {
     letter: "CN",
     fieldName: "Email_to_Serve_Notices",
-    formula: () => `=IF(${ci("email_to_serve_notices")}="yes","Yes","No")`,
+    formula: (ctx) => `=IF(${ci("email_to_serve_notices", ctx)}="yes","Yes","No")`,
   },
   // CO: Materials_Offsite (radio) - from AV
   { letter: "CO", fieldName: "Materials_Offsite", formula: (ctx) => `=IF(${isTrue(sd("AV", ctx))},"Yes","No")` },
@@ -328,9 +328,9 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   // DB: Contract Programme (checkbox) - On if DC (same row) is non-empty
   { letter: "DB", fieldName: "Contract Programme", formula: (ctx) => `=IF(${self("DC", ctx)}>" ","On","")` },
   // DC–DE: Contract_Programme / Date / Ref
-  { letter: "DC", fieldName: "Contract_Programme", formula: () => `=${ci("programme_title")}` },
-  { letter: "DD", fieldName: "Contract_Programme_Date", formula: () => `=${ci("contract_programme_dated")}` },
-  { letter: "DE", fieldName: "Contract_Programme_Ref", formula: () => `=${ci("contract_programme_reference")}` },
+  { letter: "DC", fieldName: "Contract_Programme", formula: (ctx) => `=${ci("programme_title", ctx)}` },
+  { letter: "DD", fieldName: "Contract_Programme_Date", formula: (ctx) => `=${ci("contract_programme_dated", ctx)}` },
+  { letter: "DE", fieldName: "Contract_Programme_Ref", formula: (ctx) => `=${ci("contract_programme_reference", ctx)}` },
   // DF: Email dated (checkbox) - On if DG (same row) is non-empty
   { letter: "DF", fieldName: "Email dated", formula: (ctx) => `=IF(${self("DG", ctx)}>" ","On","")` },
   // DG/DH: Email_Date / Email_From
@@ -344,7 +344,7 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   // DL: Invitation to tender dated (checkbox) - On if DM (same row) is non-empty
   { letter: "DL", fieldName: "Invitation to tender dated", formula: (ctx) => `=IF(${self("DM", ctx)}>" ","On","")` },
   // DM: Invite_Tender_Date
-  { letter: "DM", fieldName: "Invite_Tender_Date", formula: () => `=${ci("itt_dated")}` },
+  { letter: "DM", fieldName: "Invite_Tender_Date", formula: (ctx) => `=${ci("itt_dated", ctx)}` },
   // DN: Letter dated (checkbox) - On if DP (same row) is non-empty
   { letter: "DN", fieldName: "Letter dated", formula: (ctx) => `=IF(${self("DP", ctx)}>" ","On","")` },
   // DO: Letter of Award dated (checkbox) - On if DR (same row) is non-empty
@@ -359,7 +359,7 @@ export const MAPPING_COLUMNS: MappingColumn[] = [
   // DT: Notices to tenderers numbers (checkbox) - On if DU (same row) is non-empty
   { letter: "DT", fieldName: "Notices to tenderers numbers", formula: (ctx) => `=IF(${self("DU", ctx)}>" ","On","")` },
   // DU: NTT_Qty
-  { letter: "DU", fieldName: "NTT_Qty", formula: () => `=${ci("notice_to_tenderers_numbers")}` },
+  { letter: "DU", fieldName: "NTT_Qty", formula: (ctx) => `=${ci("notice_to_tenderers_numbers", ctx)}` },
   // DV: Original_Tender_Price
   { letter: "DV", fieldName: "Original_Tender_Price", formula: (ctx) => `=${sd("H", ctx)}` },
   // DW: Other_Specials

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MenuBar, type MenuDef } from "./components/MenuBar";
 import { TabBar } from "./components/TabBar";
+import { newSubcontractorDefaults } from "./lib/contractDefaults";
+import { ciGridKey } from "./lib/gridColumns";
 import { SubcontractInfoView } from "./components/SubcontractInfoView";
 import { LetterOfAwardView } from "./components/LetterOfAwardView";
 import { FinalAccountView } from "./components/FinalAccountView";
@@ -163,8 +165,10 @@ function App() {
           if (activeSubId) {
             for (const [key, v] of gridEntries) void api.setGridValue(activeSubId, key, v);
           }
-          if (project) {
-            for (const [key, v] of ciEntries) void api.setContractInfoValue(project.id, key, v);
+          // Contract Info answers are per subcontractor now, so a PDF edit
+          // only overrides this subcontractor's own cell (not the defaults row).
+          if (activeSubId) {
+            for (const [key, v] of ciEntries) void api.setGridValue(activeSubId, ciGridKey(key), v);
           }
           recomputeFieldValues();
         }, 350),
@@ -269,6 +273,7 @@ function App() {
   const addSub = async (v: Record<string, string>) => {
     if (!project) return;
     const s = await api.addSubcontractor(project.id, v.name);
+    await api.bulkSetGridValues(s.id, await newSubcontractorDefaults(project));
     setSubs((prev) => [...prev, s]);
     setActiveSubId(s.id);
     close();
@@ -290,9 +295,10 @@ function App() {
       // Persist any values already typed into the same (previously blank) grid
       // row *before* setSubs, since that triggers the grid's reload-from-DB -
       // if the write hasn't committed by then, the reload wipes the values.
-      if (initialGridValues && Object.keys(initialGridValues).length > 0) {
-        await api.bulkSetGridValues(s.id, initialGridValues);
-      }
+      await api.bulkSetGridValues(s.id, {
+        ...(await newSubcontractorDefaults(project)),
+        ...initialGridValues,
+      });
       setSubs((prev) => [...prev, s]);
       return s;
     },

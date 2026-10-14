@@ -3,7 +3,8 @@ import { HotTable, type HotTableRef } from "@handsontable/react-wrapper";
 import { registerAllModules } from "handsontable/registry";
 import type { CellChange, ChangeSource } from "handsontable/common";
 import { api, type Project, type Subcontractor, type TpCompany } from "../api";
-import { GRID_COLUMNS } from "../lib/gridColumns";
+import { GRID_COLUMNS, CI_COLUMNS } from "../lib/gridColumns";
+import { effectiveDefaults, ensureContractInfoMigrated } from "../lib/contractDefaults";
 import { applySearchFilter } from "../lib/gridSearch";
 import { buildCostCode, parseSubTrades } from "../lib/subTrades";
 import {
@@ -25,6 +26,8 @@ const NUMBER_COLUMN_KEYS = GRID_COLUMNS.filter((c) => c.type === "number").map((
 interface GridRow {
   /** Absent on a not-yet-saved blank row (Handsontable's trailing spare row). */
   _subId?: number;
+  /** The pinned top row: holds the per-column defaults, not a subcontractor. */
+  _isDefaults?: 1;
   [columnKey: string]: string | number | undefined;
 }
 
@@ -63,7 +66,6 @@ export function SubcontractorDetailsGrid({
   >({});
   const [tpCompanyNames, setTpCompanyNames] = useState<string[]>([]);
   const [subTradeCodeByTrade, setSubTradeCodeByTrade] = useState<Record<string, string>>({});
-  const [jobNumber, setJobNumber] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,6 +82,8 @@ export function SubcontractorDetailsGrid({
     let cancelled = false;
     (async () => {
       try {
+        await ensureContractInfoMigrated(project, subs);
+        if (cancelled) return;
         const [gridValues, companies, settings, contractInfo] = await Promise.all([
           api.getGridValuesForProject(project.id),
           api.listTpCompanies(),
@@ -111,12 +115,7 @@ export function SubcontractorDetailsGrid({
         const subTradeEntries = parseSubTrades(settings.list_sub_trades);
         const codeByTrade: Record<string, string> = {};
         for (const { trade, code } of subTradeEntries) codeByTrade[trade] = code;
-        // Contract Info's Job Number field only *displays* a fallback to the
-        // project's own number until the user types into it (see
-        // ContractInfoForm's displayValues) - api.getContractInfo returns the
-        // real stored value, which is empty in that case, so apply the same
-        // fallback here.
-        const job = contractInfo.job_number || project.project_number || "";
+        const defaults = effectiveDefaults(contractInfo, project);
 
         // The Code column is app-derived, not user-entered - recompute it
         // from the current Trade + Settings cost codes + job number on every
@@ -124,7 +123,11 @@ export function SubcontractorDetailsGrid({
         // persist the correction so PDF generation picks up the same value.
         for (const sub of subs) {
           const values = gridValues[sub.id] ?? (gridValues[sub.id] = {});
-          const computedCode = buildCostCode(values.A_trade ?? "", job, codeByTrade);
+          const computedCode = buildCostCode(
+            values.A_trade ?? "",
+            values.ci_job_number || defaults.job_number,
+            codeByTrade,
+          );
           if ((values.C_cost_code ?? "") !== computedCode) {
             values.C_cost_code = computedCode;
             void api.bulkSetGridValues(sub.id, { C_cost_code: computedCode });
@@ -132,7 +135,6 @@ export function SubcontractorDetailsGrid({
         }
 
         setSubTradeCodeByTrade(codeByTrade);
-        setJobNumber(job);
 
         const engine = engineRef.current;
         tpRowCountRef.current = loadTpCompanies(engine, companies as TpCompany[]);
@@ -143,21 +145,35 @@ export function SubcontractorDetailsGrid({
           tpRowCountRef.current,
         );
 
-        const builtRows: GridRow[] = subs.map((sub) => {
+        const defaultsRow: GridRow = { _isDefaults: 1 };
+        for (const col of GRID_COLUMNS) defaultsRow[col.key] = "";
+        defaultsRow.B_subcontractor = "DEFAULTS (applies to all rows)";
+        for (const col of CI_COLUMNS) defaultsRow[col.key] = defaults[col.ciKey!] ?? "";
+
+        const subRows: GridRow[] = subs.map((sub) => {
           const values = gridValues[sub.id] ?? {};
           const row: GridRow = { _subId: sub.id };
           for (const col of GRID_COLUMNS) {
             if (col.type === "name-mirror") row[col.key] = sub.name;
             else if (col.type === "computed") {
               row[col.key] = computed[sub.id]?.[col.key as keyof ComputedRow] ?? "";
-            } else if (col.type === "contract-info-mirror") {
-              row[col.key] = contractInfo[col.contractInfoKey!] ?? "";
             } else row[col.key] = values[col.key] ?? "";
           }
           return row;
         });
+        const builtRows: GridRow[] = [defaultsRow, ...subRows];
+
+        const [pm, btm, qs] = await Promise.all([
+          api.listStaff("PM"),
+          api.listStaff("BTM"),
+          api.listStaff("QS"),
+        ]);
+        if (cancelled) return;
 
         setDropdownOptionsByListKey({
+          staff_PM: pm.map((m) => m.name),
+          staff_BTM: btm.map((m) => m.name),
+          staff_QS: qs.map((m) => m.name),
           list_sub_trades: subTradeEntries.map((e) => e.trade),
           list_mats_off_site: parseList(settings.list_mats_off_site),
         });
@@ -178,7 +194,7 @@ export function SubcontractorDetailsGrid({
   // don't track a wholesale data swap.
   useEffect(() => {
     const hot = hotRef.current?.hotInstance;
-    if (hot) applySearchFilter(hot, searchQuery);
+    if (hot) applySearchFilter(hot, searchQuery, 1);
   }, [rows, searchQuery]);
 
   const columns = useMemo(
@@ -190,21 +206,15 @@ export function SubcontractorDetailsGrid({
         };
         if (col.type === "checkbox") {
           base.type = "checkbox";
-        } else if (col.type === "contract-info-mirror") {
-          base.readOnly = true;
-          // Same non-entry tint as the computed columns.
-          base.className = "htComputedColumn";
-          if (col.contractInfoKey === "required_until_other") {
-            // text mirror, not boolean
-          } else {
-            base.type = "checkbox";
-          }
         } else if (col.type === "computed" || col.type === "cost-code") {
           base.readOnly = true;
           base.className = "htComputedColumn";
         } else if (col.type === "dropdown") {
           base.type = "dropdown";
-          base.source = dropdownOptionsByListKey[col.settingsListKey!] ?? [];
+          base.source =
+            col.options ??
+            dropdownOptionsByListKey[col.settingsListKey ?? `staff_${col.staffRole}`] ??
+            [];
         } else if (col.type === "name-mirror") {
           // Autocomplete (not a strict dropdown) against TP Companies' names
           // - D/E's XLOOKUP needs an exact match to find an address/email,
@@ -227,6 +237,18 @@ export function SubcontractorDetailsGrid({
       }),
     [dropdownOptionsByListKey, tpCompanyNames],
   );
+
+  // Row 0 is the pinned defaults row: only the former-Contract-Info columns
+  // are editable there, and the whole row gets a distinct tint.
+  const cells = (row: number, col: number) => {
+    if (row !== 0) return {};
+    const gridCol = GRID_COLUMNS[col];
+    const base = (columns[col]?.className as string | undefined) ?? "";
+    return {
+      readOnly: !gridCol?.ciKey,
+      className: `${base} htDefaultsRow`.trim(),
+    };
+  };
 
   // A single gesture can touch a huge number of cells at once - e.g.
   // selecting the top-left corner ("select all") and pressing Delete emits one
@@ -259,7 +281,6 @@ export function SubcontractorDetailsGrid({
         if (
           !col ||
           col.type === "computed" ||
-          col.type === "contract-info-mirror" ||
           col.type === "cost-code"
         )
           continue;
@@ -272,6 +293,43 @@ export function SubcontractorDetailsGrid({
         if (rowIndex === null) continue;
         const row = hot.getSourceDataAtRow(rowIndex) as GridRow | undefined;
         if (!row) continue;
+        // Row 0 is the pinned defaults row, so the HyperFormula engine (one
+        // row per subcontractor) is offset by one from the grid's source data.
+        const engRow = rowIndex - 1;
+
+        if (row._isDefaults) {
+          // Defaults row: persist the default, then broadcast it to every
+          // subcontractor row's cell in this column.
+          if (!col.ciKey || !project) continue;
+          const newDefault = newValue == null ? "" : String(newValue);
+          void api
+            .setContractInfoValue(project.id, col.ciKey, newDefault)
+            .catch((e) => console.error("save default failed", e));
+          const colIdx = GRID_COLUMNS.findIndex((c) => c.key === col.key);
+          const allRows = hot.getSourceData() as GridRow[];
+          allRows.forEach((r, p) => {
+            if (p === 0 || !r._subId) return;
+            hot.setSourceDataAtCell(p, col.key, newDefault, "sync");
+            setCell(engine, p - 1, colIdx, newDefault);
+            let e = editsByRow.get(p - 1);
+            if (!e) {
+              e = { subId: r._subId, values: {}, aTradeChanged: false };
+              editsByRow.set(p - 1, e);
+            }
+            e.values[col.key] = newDefault;
+            if (col.key === "ci_job_number") {
+              const code = buildCostCode(
+                String(r.A_trade ?? ""),
+                newDefault || project.project_number,
+                subTradeCodeByTrade,
+              );
+              e.values.C_cost_code = code;
+              hot.setSourceDataAtCell(p, "C_cost_code", code, "sync");
+            }
+          });
+          anyEdit = true;
+          continue;
+        }
         let value = newValue == null ? "" : String(newValue);
         if (col.type === "number" && value) {
           // Defensive backstop: strip thousands-separator commas regardless of
@@ -319,7 +377,6 @@ export function SubcontractorDetailsGrid({
             for (const c of GRID_COLUMNS) {
               if (
                 c.type === "computed" ||
-                c.type === "contract-info-mirror" ||
                 c.type === "cost-code" ||
                 c.type === "name-mirror"
               )
@@ -336,11 +393,11 @@ export function SubcontractorDetailsGrid({
               .catch((e) => console.error("rename failed", e));
             // The name is the XLOOKUP key for D/E - recompute this row.
             const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
-            setCell(engine, rowIndex, colIndex, trimmed);
-            let entry = editsByRow.get(rowIndex);
+            setCell(engine, engRow, colIndex, trimmed);
+            let entry = editsByRow.get(engRow);
             if (!entry) {
               entry = { subId: row._subId, values: {}, aTradeChanged: false };
-              editsByRow.set(rowIndex, entry);
+              editsByRow.set(engRow, entry);
             }
           }
           continue;
@@ -349,17 +406,19 @@ export function SubcontractorDetailsGrid({
         if (!row._subId) continue; // blank spare row with no name yet - nothing to persist to
 
         const colIndex = GRID_COLUMNS.findIndex((c) => c.key === col.key);
-        setCell(engine, rowIndex, colIndex, value);
+        setCell(engine, engRow, colIndex, value);
 
-        let entry = editsByRow.get(rowIndex);
+        let entry = editsByRow.get(engRow);
         if (!entry) {
           entry = { subId: row._subId, values: {}, aTradeChanged: false };
-          editsByRow.set(rowIndex, entry);
+          editsByRow.set(engRow, entry);
         }
         entry.values[col.key] = value;
-        if (col.key === "A_trade") {
+        if (col.key === "A_trade" || col.key === "ci_job_number") {
           entry.aTradeChanged = true;
-          const newCode = buildCostCode(value, jobNumber, subTradeCodeByTrade);
+          const trade = col.key === "A_trade" ? value : String(row.A_trade ?? "");
+          const job = col.key === "ci_job_number" ? value : String(row.ci_job_number ?? "");
+          const newCode = buildCostCode(trade, job, subTradeCodeByTrade);
           entry.values.C_cost_code = newCode;
           hot.setSourceDataAtCell(rowIndex, "C_cost_code", newCode, "sync");
         }
@@ -371,18 +430,20 @@ export function SubcontractorDetailsGrid({
     }
 
     // One DB write + one recompute-read + one DOM sync per affected row.
-    for (const [rowIndex, entry] of editsByRow) {
+    for (const [engRow, entry] of editsByRow) {
+      const rowIndex = engRow + 1; // grid source row (row 0 is the defaults row)
       if (Object.keys(entry.values).length > 0) {
         void api
           .bulkSetGridValues(entry.subId, entry.values)
           .catch((e) => console.error("save failed", e));
       }
-      const computed = recomputeRow(engine, rowIndex);
+      const computed = recomputeRow(engine, engRow);
       hot.setSourceDataAtCell(rowIndex, "D_tp_address", computed.D_tp_address, "sync");
       hot.setSourceDataAtCell(rowIndex, "E_tp_email", computed.E_tp_email, "sync");
       hot.setSourceDataAtCell(rowIndex, "M_contract_value", computed.M_contract_value, "sync");
     }
 
+    hot.render();
     if (anyEdit || editsByRow.size > 0) onChanged();
   };
 
@@ -511,6 +572,8 @@ export function SubcontractorDetailsGrid({
           colHeaders={GRID_COLUMNS.map((c) => c.title)}
           rowHeaders={true}
           fixedColumnsStart={2}
+          fixedRowsTop={1}
+          cells={cells}
           wordWrap={false}
           manualColumnResize={true}
           autoColumnSize={true}

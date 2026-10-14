@@ -6,7 +6,7 @@ import type Handsontable from "handsontable";
 // Source data is read via getSourceData (always full + physical-ordered,
 // unaffected by any existing trim) so re-filtering after a previous filter
 // still sees every row.
-export function applySearchFilter(hot: Handsontable, query: string): void {
+export function applySearchFilter(hot: Handsontable, query: string, keepRows = 0): void {
   const trimPlugin = hot.getPlugin("trimRows");
   const q = query.trim().toLowerCase();
   if (!q) {
@@ -17,6 +17,7 @@ export function applySearchFilter(hot: Handsontable, query: string): void {
   const data = hot.getSourceData() as Record<string, unknown>[];
   const rowsToTrim: number[] = [];
   data.forEach((row, physicalRow) => {
+    if (physicalRow < keepRows) return; // pinned rows (e.g. the defaults row) are never hidden
     const matches = Object.values(row).some(
       (v) => v !== null && v !== undefined && String(v).toLowerCase().includes(q),
     );
