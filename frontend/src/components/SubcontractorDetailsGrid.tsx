@@ -3,7 +3,7 @@ import { HotTable, type HotTableRef } from "@handsontable/react-wrapper";
 import { registerAllModules } from "handsontable/registry";
 import type { CellChange, ChangeSource } from "handsontable/common";
 import { api, type Project, type Subcontractor, type TpCompany } from "../api";
-import { GRID_COLUMNS, CI_COLUMNS } from "../lib/gridColumns";
+import { GRID_COLUMNS, DEFAULTABLE_COLUMNS, defaultKeyFor, type GridColumn } from "../lib/gridColumns";
 import { effectiveDefaults, ensureContractInfoMigrated } from "../lib/contractDefaults";
 import { applySearchFilter } from "../lib/gridSearch";
 import { buildCostCode, parseSubTrades } from "../lib/subTrades";
@@ -26,10 +26,25 @@ const NUMBER_COLUMN_KEYS = GRID_COLUMNS.filter((c) => c.type === "number").map((
 interface GridRow {
   /** Absent on a not-yet-saved blank row (Handsontable's trailing spare row). */
   _subId?: number;
-  /** The pinned top row: holds the per-column defaults, not a subcontractor. */
-  _isDefaults?: 1;
   [columnKey: string]: string | number | undefined;
 }
+
+interface RowEdits {
+  subId: number;
+  values: Record<string, string>;
+  aTradeChanged: boolean;
+}
+
+const DEFAULTABLE_KEYS = new Set(DEFAULTABLE_COLUMNS.map((c) => c.key));
+
+/** Starting column width; the defaults strip and the grid share one width list so they stay aligned. */
+function initialWidth(col: GridColumn): number {
+  if (col.type === "name-mirror" || col.key === "D_tp_address" || col.key === "E_tp_email") return 220;
+  const longest = Math.max(...col.title.split("\n").map((l) => l.length));
+  const min = col.type === "checkbox" ? 90 : col.type === "dropdown" ? 140 : 110;
+  return Math.max(min, Math.min(260, Math.round(longest * 7) + 30));
+}
+const ROW_HEADER_WIDTH = 64;
 
 function parseList(json: string | undefined): string[] {
   if (!json) return [];
@@ -71,6 +86,9 @@ export function SubcontractorDetailsGrid({
   const [searchQuery, setSearchQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const hotRef = useRef<HotTableRef>(null);
+  const defaultsHotRef = useRef<HotTableRef>(null);
+  const [defaultsRows, setDefaultsRows] = useState<GridRow[]>([{}]);
+  const [colWidths, setColWidths] = useState<number[]>(() => GRID_COLUMNS.map(initialWidth));
   const engineRef = useRef(createEngine());
   const tpRowCountRef = useRef(1);
 
@@ -125,7 +143,7 @@ export function SubcontractorDetailsGrid({
           const values = gridValues[sub.id] ?? (gridValues[sub.id] = {});
           const computedCode = buildCostCode(
             values.A_trade ?? "",
-            values.ci_job_number || defaults.job_number,
+            values.ci_job_number || project.project_number,
             codeByTrade,
           );
           if ((values.C_cost_code ?? "") !== computedCode) {
@@ -145,12 +163,14 @@ export function SubcontractorDetailsGrid({
           tpRowCountRef.current,
         );
 
-        const defaultsRow: GridRow = { _isDefaults: 1 };
-        for (const col of GRID_COLUMNS) defaultsRow[col.key] = "";
-        defaultsRow.B_subcontractor = "DEFAULTS (applies to all rows)";
-        for (const col of CI_COLUMNS) defaultsRow[col.key] = defaults[col.ciKey!] ?? "";
+        // The defaults strip lives outside the table's data: one editable
+        // cell per defaultable column, blank for auto-calculated ones.
+        const defaultsRow: GridRow = {};
+        for (const col of GRID_COLUMNS) defaultsRow[col.key] = DEFAULTABLE_KEYS.has(col.key) ? defaults[col.key] ?? "" : "";
+        defaultsRow.B_subcontractor = "Applies to all rows";
+        setDefaultsRows([defaultsRow]);
 
-        const subRows: GridRow[] = subs.map((sub) => {
+        const builtRows: GridRow[] = subs.map((sub) => {
           const values = gridValues[sub.id] ?? {};
           const row: GridRow = { _subId: sub.id };
           for (const col of GRID_COLUMNS) {
@@ -161,7 +181,6 @@ export function SubcontractorDetailsGrid({
           }
           return row;
         });
-        const builtRows: GridRow[] = [defaultsRow, ...subRows];
 
         const [pm, btm, qs] = await Promise.all([
           api.listStaff("PM"),
@@ -194,7 +213,7 @@ export function SubcontractorDetailsGrid({
   // don't track a wholesale data swap.
   useEffect(() => {
     const hot = hotRef.current?.hotInstance;
-    if (hot) applySearchFilter(hot, searchQuery, 1);
+    if (hot) applySearchFilter(hot, searchQuery);
   }, [rows, searchQuery]);
 
   const columns = useMemo(
@@ -238,15 +257,15 @@ export function SubcontractorDetailsGrid({
     [dropdownOptionsByListKey, tpCompanyNames],
   );
 
-  // Row 0 is the pinned defaults row: only the former-Contract-Info columns
-  // are editable there, and the whole row gets a distinct tint.
-  const cells = (row: number, col: number) => {
-    if (row !== 0) return {};
+  // The defaults strip is a one-row table above the grid: only defaultable
+  // columns are editable; auto-calculated ones are greyed out.
+  const defaultCells = (_row: number, col: number) => {
     const gridCol = GRID_COLUMNS[col];
     const base = (columns[col]?.className as string | undefined) ?? "";
+    const editable = !!gridCol && DEFAULTABLE_KEYS.has(gridCol.key);
     return {
-      readOnly: !gridCol?.ciKey,
-      className: `${base} htDefaultsRow`.trim(),
+      readOnly: !editable,
+      className: `${base} ${editable ? "htDefaultsCell" : "htNoDefaultCell"}`.trim(),
     };
   };
 
@@ -265,11 +284,6 @@ export function SubcontractorDetailsGrid({
     hot: NonNullable<HotTableRef["hotInstance"]>,
     changes: CellChange[],
   ) => {
-    interface RowEdits {
-      subId: number;
-      values: Record<string, string>;
-      aTradeChanged: boolean;
-    }
     const editsByRow = new Map<number, RowEdits>();
     let anyEdit = false;
 
@@ -293,43 +307,8 @@ export function SubcontractorDetailsGrid({
         if (rowIndex === null) continue;
         const row = hot.getSourceDataAtRow(rowIndex) as GridRow | undefined;
         if (!row) continue;
-        // Row 0 is the pinned defaults row, so the HyperFormula engine (one
-        // row per subcontractor) is offset by one from the grid's source data.
-        const engRow = rowIndex - 1;
+        const engRow = rowIndex;
 
-        if (row._isDefaults) {
-          // Defaults row: persist the default, then broadcast it to every
-          // subcontractor row's cell in this column.
-          if (!col.ciKey || !project) continue;
-          const newDefault = newValue == null ? "" : String(newValue);
-          void api
-            .setContractInfoValue(project.id, col.ciKey, newDefault)
-            .catch((e) => console.error("save default failed", e));
-          const colIdx = GRID_COLUMNS.findIndex((c) => c.key === col.key);
-          const allRows = hot.getSourceData() as GridRow[];
-          allRows.forEach((r, p) => {
-            if (p === 0 || !r._subId) return;
-            hot.setSourceDataAtCell(p, col.key, newDefault, "sync");
-            setCell(engine, p - 1, colIdx, newDefault);
-            let e = editsByRow.get(p - 1);
-            if (!e) {
-              e = { subId: r._subId, values: {}, aTradeChanged: false };
-              editsByRow.set(p - 1, e);
-            }
-            e.values[col.key] = newDefault;
-            if (col.key === "ci_job_number") {
-              const code = buildCostCode(
-                String(r.A_trade ?? ""),
-                newDefault || project.project_number,
-                subTradeCodeByTrade,
-              );
-              e.values.C_cost_code = code;
-              hot.setSourceDataAtCell(p, "C_cost_code", code, "sync");
-            }
-          });
-          anyEdit = true;
-          continue;
-        }
         let value = newValue == null ? "" : String(newValue);
         if (col.type === "number" && value) {
           // Defensive backstop: strip thousands-separator commas regardless of
@@ -417,7 +396,9 @@ export function SubcontractorDetailsGrid({
         if (col.key === "A_trade" || col.key === "ci_job_number") {
           entry.aTradeChanged = true;
           const trade = col.key === "A_trade" ? value : String(row.A_trade ?? "");
-          const job = col.key === "ci_job_number" ? value : String(row.ci_job_number ?? "");
+          const job =
+            (col.key === "ci_job_number" ? value : String(row.ci_job_number ?? "")) ||
+            project?.project_number;
           const newCode = buildCostCode(trade, job, subTradeCodeByTrade);
           entry.values.C_cost_code = newCode;
           hot.setSourceDataAtCell(rowIndex, "C_cost_code", newCode, "sync");
@@ -429,15 +410,23 @@ export function SubcontractorDetailsGrid({
       engine.resumeEvaluation();
     }
 
-    // One DB write + one recompute-read + one DOM sync per affected row.
-    for (const [engRow, entry] of editsByRow) {
-      const rowIndex = engRow + 1; // grid source row (row 0 is the defaults row)
+    flushEdits(hot, editsByRow, anyEdit);
+  };
+
+  // One DB write + one recompute-read + one DOM sync per affected row.
+  const flushEdits = (
+    hot: NonNullable<HotTableRef["hotInstance"]>,
+    editsByRow: Map<number, RowEdits>,
+    anyEdit: boolean,
+  ) => {
+    const engine = engineRef.current;
+    for (const [rowIndex, entry] of editsByRow) {
       if (Object.keys(entry.values).length > 0) {
         void api
           .bulkSetGridValues(entry.subId, entry.values)
           .catch((e) => console.error("save failed", e));
       }
-      const computed = recomputeRow(engine, engRow);
+      const computed = recomputeRow(engine, rowIndex);
       hot.setSourceDataAtCell(rowIndex, "D_tp_address", computed.D_tp_address, "sync");
       hot.setSourceDataAtCell(rowIndex, "E_tp_email", computed.E_tp_email, "sync");
       hot.setSourceDataAtCell(rowIndex, "M_contract_value", computed.M_contract_value, "sync");
@@ -446,6 +435,76 @@ export function SubcontractorDetailsGrid({
     hot.render();
     if (anyEdit || editsByRow.size > 0) onChanged();
   };
+
+  // An edit in the defaults strip: persist it as the column's default, then
+  // write it into every subcontractor row's cell in that column.
+  const onDefaultsAfterChange = (changes: CellChange[] | null, source: ChangeSource) => {
+    const hot = hotRef.current?.hotInstance;
+    if (!hot || !project || !changes || source === "loadData" || (source as string) === "sync") return;
+
+    const engine = engineRef.current;
+    const editsByRow = new Map<number, RowEdits>();
+    const allRows = hot.getSourceData() as GridRow[];
+    engine.suspendEvaluation();
+    try {
+      for (const [, prop, , newValue] of changes) {
+        const col = GRID_COLUMNS.find((c) => c.key === prop);
+        if (!col || !DEFAULTABLE_KEYS.has(col.key)) continue;
+        let value = newValue == null ? "" : String(newValue);
+        if (col.type === "number") value = value.replace(/,/g, "");
+        void api
+          .setContractInfoValue(project.id, defaultKeyFor(col), value)
+          .catch((e) => console.error("save default failed", e));
+        const colIdx = GRID_COLUMNS.findIndex((c) => c.key === col.key);
+        allRows.forEach((r, p) => {
+          if (!r._subId) return; // the trailing blank spare row
+          hot.setSourceDataAtCell(p, col.key, value, "sync");
+          setCell(engine, p, colIdx, value);
+          let entry = editsByRow.get(p);
+          if (!entry) {
+            entry = { subId: r._subId, values: {}, aTradeChanged: false };
+            editsByRow.set(p, entry);
+          }
+          entry.values[col.key] = value;
+          if (col.key === "A_trade" || col.key === "ci_job_number") {
+            const code = buildCostCode(
+              String(r.A_trade ?? ""),
+              String(r.ci_job_number ?? "") || project.project_number,
+              subTradeCodeByTrade,
+            );
+            entry.values.C_cost_code = code;
+            hot.setSourceDataAtCell(p, "C_cost_code", code, "sync");
+          }
+        });
+      }
+    } finally {
+      engine.resumeEvaluation();
+    }
+    flushEdits(hot, editsByRow, true);
+  };
+
+  // Keep the defaults strip horizontally in step with the grid (and back),
+  // and leave room for the grid's vertical scrollbar so columns stay aligned.
+  const syncing = useRef(false);
+  const holderOf = (ref: React.RefObject<HotTableRef | null>) =>
+    ref.current?.hotInstance?.rootElement.querySelector<HTMLElement>(".ht_master .wtHolder") ?? null;
+  const syncScroll = (from: React.RefObject<HotTableRef | null>, to: React.RefObject<HotTableRef | null>) => {
+    if (syncing.current) return;
+    const a = holderOf(from);
+    const b = holderOf(to);
+    if (!a || !b || a.scrollLeft === b.scrollLeft) return;
+    syncing.current = true;
+    b.scrollLeft = a.scrollLeft;
+    syncing.current = false;
+  };
+  const padForScrollbar = () => {
+    const holder = holderOf(hotRef);
+    const strip = holder?.closest(".sdgrid")?.querySelector<HTMLElement>(".sdgrid__defaults");
+    if (holder && strip) strip.style.paddingRight = `${holder.offsetWidth - holder.clientWidth}px`;
+  };
+
+  const onColumnResize = (newSize: number, column: number) =>
+    setColWidths((prev) => prev.map((w, i) => (i === column ? newSize : w)));
 
   // Above this many cell changes in one gesture, the batched apply takes long
   // enough to be perceptible, so route it through the paint-first overlay path.
@@ -556,6 +615,29 @@ export function SubcontractorDetailsGrid({
           onBlur={commitFormulaBar}
         />
       </div>
+      <div className="sdgrid__defaults" title="Values entered here are applied to every row in that column">
+        <HotTable
+          ref={defaultsHotRef}
+          data={defaultsRows}
+          columns={columns}
+          colHeaders={false}
+          rowHeaders={["Defaults"]}
+          rowHeaderWidth={ROW_HEADER_WIDTH}
+          fixedColumnsStart={2}
+          colWidths={colWidths}
+          manualColumnResize={true}
+          wordWrap={false}
+          cells={defaultCells}
+          height="auto"
+          width="100%"
+          themeName="ht-theme-main"
+          licenseKey="non-commercial-and-evaluation"
+          contextMenu={false}
+          afterChange={onDefaultsAfterChange}
+          afterColumnResize={onColumnResize}
+          afterScrollHorizontally={() => syncScroll(defaultsHotRef, hotRef)}
+        />
+      </div>
       <div className="sdgrid__table">
         {isProcessing && (
           <div className="sdgrid__processing" role="status" aria-live="polite">
@@ -572,11 +654,13 @@ export function SubcontractorDetailsGrid({
           colHeaders={GRID_COLUMNS.map((c) => c.title)}
           rowHeaders={true}
           fixedColumnsStart={2}
-          fixedRowsTop={1}
-          cells={cells}
           wordWrap={false}
           manualColumnResize={true}
-          autoColumnSize={true}
+          colWidths={colWidths}
+          rowHeaderWidth={ROW_HEADER_WIDTH}
+          afterColumnResize={onColumnResize}
+          afterScrollHorizontally={() => syncScroll(hotRef, defaultsHotRef)}
+          afterRender={padForScrollbar}
           minSpareRows={1}
           trimRows={true}
           height="100%"

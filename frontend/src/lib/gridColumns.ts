@@ -192,7 +192,15 @@ const APPENDED_CI_COLUMNS: GridColumn[] = [...CONTRACT_INFO_LEFT, ...CONTRACT_IN
 // formulas address them by letter); the former Contract Info fields follow.
 export const GRID_COLUMNS: GridColumn[] = [...BASE_GRID_COLUMNS, ...APPENDED_CI_COLUMNS];
 
-/** Every column that is a former Contract Info field (has a defaults-row cell). */
+/** Columns that take a value in the defaults row (everything except auto-calculated / auto-populated ones). */
+export const DEFAULTABLE_COLUMNS = GRID_COLUMNS.filter(
+  (c) => c.type !== "computed" && c.type !== "cost-code" && c.type !== "name-mirror",
+);
+
+/** Where a column's default is persisted (contract_info_values.field_key). */
+export const defaultKeyFor = (col: GridColumn) => col.ciKey ?? col.key;
+
+/** Every column that is a former Contract Info field. */
 export const CI_COLUMNS = GRID_COLUMNS.filter((c) => c.ciKey);
 
 export const CHECKBOX_COLUMN_KEYS = new Set(
