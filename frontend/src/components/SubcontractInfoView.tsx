@@ -1,12 +1,11 @@
 import { useState } from "react";
 import type { Project, Subcontractor } from "../api";
 import { TabBar } from "./TabBar";
-import { ContractInfoForm } from "./ContractInfoForm";
 import { SubcontractorDetailsGrid } from "./SubcontractorDetailsGrid";
 import { TpCompaniesGrid } from "./TpCompaniesGrid";
 import "./SubcontractInfoView.css";
 
-type SubTab = "contract-info" | "subcontractor-details" | "tp-companies";
+type SubTab = "subcontractor-details" | "tp-companies";
 
 export function SubcontractInfoView({
   project,
@@ -26,13 +25,12 @@ export function SubcontractInfoView({
   onDeleteSubcontractor: (sub: Subcontractor) => void;
   onChanged: () => void;
 }) {
-  const [subTab, setSubTab] = useState<SubTab>("contract-info");
+  const [subTab, setSubTab] = useState<SubTab>("subcontractor-details");
 
   return (
     <div className="subinfo">
       <TabBar
         tabs={[
-          { key: "contract-info", label: "Contract Info" },
           { key: "subcontractor-details", label: "Subcontractor Details" },
           { key: "tp-companies", label: "TP Companies" },
         ]}
@@ -41,10 +39,6 @@ export function SubcontractInfoView({
       />
 
       <div className="subinfo__body">
-        {subTab === "contract-info" && (
-          <ContractInfoForm project={project} onChanged={onChanged} />
-        )}
-
         {subTab === "subcontractor-details" && (
           <SubcontractorDetailsGrid
             project={project}

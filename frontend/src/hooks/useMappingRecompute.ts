@@ -8,6 +8,9 @@ import {
   loadContractInfo,
   buildMapping,
 } from "../lib/hyperformulaEngine";
+import { CONTRACT_INFO_CELL_ORDER } from "../lib/contractInfoCellMap";
+import { ciGridKey } from "../lib/gridColumns";
+import { ensureContractInfoMigrated } from "../lib/contractDefaults";
 import {
   SA_FIELD_DEFAULTS_KEY,
   applyFieldDefaults,
@@ -17,7 +20,7 @@ import {
 /**
  * Owns the HyperFormula Mapping-sheet pipeline (see hyperformulaEngine.ts /
  * mappingFormulas.ts) and pushes its output into `field_values` - the thing
- * that actually drives the PDF tab. Both ContractInfoForm and
+ * that actually drives the PDF tab. Both the Subcontractor Details grid and
  * SubcontractorDetailsGrid call `recompute()` (debounced) after any edit,
  * since a Contract Info change affects every subcontractor's row and a grid
  * edit affects its own row; recomputing everyone each time is simpler and
@@ -32,11 +35,11 @@ export function useMappingRecompute(project: Project | null, subs: Subcontractor
 
   const recomputeNow = useCallback(async () => {
     if (!project) return;
-    const [gridValues, companies, settings, contractInfo, staffQs] = await Promise.all([
+    await ensureContractInfoMigrated(project, subsRef.current);
+    const [gridValues, companies, settings, staffQs] = await Promise.all([
       api.getGridValuesForProject(project.id),
       api.listTpCompanies(),
       api.getSettings(),
-      api.getContractInfo(project.id),
       api.listStaff("QS"),
     ]);
 
@@ -53,15 +56,18 @@ export function useMappingRecompute(project: Project | null, subs: Subcontractor
       engine,
       staffQs.map((s) => ({ name: s.name, email: s.email })),
     );
-    // Project Name / Job Number fall back to the project's own identity until
-    // the user overrides them in Contract Info - mirroring ContractInfoForm's
-    // `displayValues` so the PDF shows the same values the form does (otherwise
-    // a fresh project's Project_Name field stays blank until first edited).
-    loadContractInfo(engine, {
-      ...contractInfo,
-      project_name: contractInfo.project_name || project.name,
-      job_number: contractInfo.job_number || project.project_number,
-    });
+    // Contract Info answers are per subcontractor now (grid columns); Project
+    // Name falls back to the project's own identity until set, as before.
+    loadContractInfo(
+      engine,
+      currentSubs.map((sub) => {
+        const g = gridValues[sub.id] ?? {};
+        const row: Record<string, string> = {};
+        for (const key of CONTRACT_INFO_CELL_ORDER) row[key] = g[ciGridKey(key)] ?? "";
+        row.project_name = row.project_name || project.name;
+        return row;
+      }),
+    );
 
     const mapped = buildMapping(engine, currentSubs, tpRowCount, staffQsRowCount, {
       companyName: settings.company_name ?? "",

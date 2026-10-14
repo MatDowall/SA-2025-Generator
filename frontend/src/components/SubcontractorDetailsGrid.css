@@ -132,3 +132,23 @@
   color: var(--text-muted);
   text-align: center;
 }
+
+/* Defaults strip: a one-row table above the grid; values apply to every row. */
+.sdgrid__defaults {
+  flex: 0 0 auto;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.sdgrid__defaults .wtHolder {
+  overflow-x: hidden !important;
+}
+
+.handsontable td.htDefaultsCell {
+  background-color: color-mix(in srgb, #f5b400 22%, transparent) !important;
+  font-weight: 600;
+}
+
+/* Auto-calculated / auto-populated columns take no default. */
+.handsontable td.htNoDefaultCell {
+  background-color: color-mix(in srgb, var(--ht-foreground-color) 8%, transparent) !important;
+}

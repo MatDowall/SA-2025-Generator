@@ -6,6 +6,8 @@
 // and Contract Info, not a parallel writer of PDF output.
 import { api, type ParsedCsv, type Project, type Subcontractor } from "../api";
 import { applyCsvRow } from "./csvReverseMap";
+import { newSubcontractorDefaults } from "./contractDefaults";
+import { ciGridKey } from "./gridColumns";
 
 export interface CsvImportResult {
   created: number;
@@ -25,7 +27,6 @@ export async function importCsvIntoProject(
   let created = 0;
   let updated = 0;
   let fieldsSet = 0;
-  const mergedContractInfo: Record<string, string> = {};
 
   for (let i = 0; i < parsed.rows.length; i++) {
     const row = parsed.rows[i];
@@ -36,6 +37,7 @@ export async function importCsvIntoProject(
     let sub = byNameLower.get(subName.toLowerCase());
     if (!sub) {
       sub = await api.addSubcontractor(project.id, subName);
+      await api.bulkSetGridValues(sub.id, await newSubcontractorDefaults(project));
       byNameLower.set(subName.toLowerCase(), sub);
       created++;
     } else {
@@ -47,21 +49,14 @@ export async function importCsvIntoProject(
       rowObj[col] = row[i] ?? "";
     });
 
+    // Contract Info answers are per-subcontractor grid columns now, so each
+    // CSV row's answers land on that row (overriding the defaults it started with).
     const { grid, contractInfo } = applyCsvRow(rowObj);
+    for (const [key, value] of Object.entries(contractInfo)) grid[ciGridKey(key)] = value;
     if (Object.keys(grid).length > 0) {
       await api.bulkSetGridValues(sub.id, grid);
       fieldsSet += Object.keys(grid).length;
     }
-    // Contract Info is global, not per-row - the export duplicates the same
-    // answers on every row, so just merge them all, first value wins.
-    for (const [key, value] of Object.entries(contractInfo)) {
-      if (!(key in mergedContractInfo)) mergedContractInfo[key] = value;
-    }
-  }
-
-  if (Object.keys(mergedContractInfo).length > 0) {
-    await api.setContractInfoBulk(project.id, mergedContractInfo);
-    fieldsSet += Object.keys(mergedContractInfo).length;
   }
 
   return { created, updated, fields_set: fieldsSet, unknown_columns: [] };
